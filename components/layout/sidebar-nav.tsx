@@ -7,20 +7,28 @@ import {
   BadgeDollarSign,
   BriefcaseBusiness,
   Building2,
+  ClipboardCheck,
   FileCheck2,
   GraduationCap,
   LayoutDashboard,
   Megaphone,
+  Table2,
   UploadCloud,
   UsersRound,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+export type NavPermissions = {
+  isAdmin: boolean;
+  canAccessDataEntry: boolean;
+  canApprove: boolean;
+};
+
 const NAV_ITEMS: {
   href: string;
   label: string;
   icon: LucideIcon;
-  adminOnly?: boolean;
+  show?: (perms: NavPermissions) => boolean;
 }[] = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
   { href: "/dashboard/sales", label: "Sales & Marketing", icon: Megaphone },
@@ -29,8 +37,30 @@ const NAV_ITEMS: {
   { href: "/dashboard/accounts", label: "Accounts", icon: BadgeDollarSign },
   { href: "/dashboard/placement", label: "Job Placement", icon: BriefcaseBusiness },
   { href: "/dashboard/centres", label: "Study Centres", icon: Building2 },
-  { href: "/upload", label: "Upload", icon: UploadCloud, adminOnly: true },
-  { href: "/admin", label: "Admin", icon: UsersRound, adminOnly: true },
+  {
+    href: "/data-entry",
+    label: "Data Entry",
+    icon: Table2,
+    show: (perms) => perms.canAccessDataEntry,
+  },
+  {
+    href: "/approvals",
+    label: "Approvals",
+    icon: ClipboardCheck,
+    show: (perms) => perms.canApprove,
+  },
+  {
+    href: "/upload",
+    label: "Upload",
+    icon: UploadCloud,
+    show: (perms) => perms.isAdmin,
+  },
+  {
+    href: "/admin",
+    label: "Admin",
+    icon: UsersRound,
+    show: (perms) => perms.isAdmin,
+  },
   { href: "/preview", label: "Chart Preview", icon: LayoutDashboard },
 ];
 
@@ -53,17 +83,17 @@ function NavItemLabel({ label }: { label: string }) {
 }
 
 export function SidebarNav({
-  isAdmin,
+  permissions,
   onNavigate,
 }: {
-  isAdmin: boolean;
+  permissions: NavPermissions;
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
 
   return (
     <nav className="space-y-1 px-4 py-6">
-      {NAV_ITEMS.filter((item) => !item.adminOnly || isAdmin).map((item) => {
+      {NAV_ITEMS.filter((item) => !item.show || item.show(permissions)).map((item) => {
         const Icon = item.icon;
         const active =
           pathname === item.href ||

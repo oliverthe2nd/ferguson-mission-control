@@ -5,9 +5,9 @@ import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { SidebarNav } from "./sidebar-nav";
+import { SidebarNav, type NavPermissions } from "./sidebar-nav";
 
-export function MobileNav({ isAdmin }: { isAdmin: boolean }) {
+export function MobileNav({ permissions }: { permissions: NavPermissions }) {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -82,7 +82,7 @@ export function MobileNav({ isAdmin }: { isAdmin: boolean }) {
           </div>
 
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-            <SidebarNav isAdmin={isAdmin} onNavigate={() => setOpen(false)} />
+            <SidebarNav permissions={permissions} onNavigate={() => setOpen(false)} />
           </div>
         </aside>
       </div>

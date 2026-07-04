@@ -31,6 +31,27 @@ export const REPORT_TYPES = [
 
 export type ReportType = (typeof REPORT_TYPES)[number];
 
+/** Pillars managers can edit in-app (sales comes from Zoho). */
+export const EDITABLE_REPORT_TYPES = [
+  "enrolment_milestones",
+  "visa_lodgement",
+  "accounts_receivable",
+  "job_placement",
+  "study_centres",
+] as const;
+
+export type EditableReportType = (typeof EDITABLE_REPORT_TYPES)[number];
+
+export const APPROVER_EMAILS = [
+  "oliver@ferguson4me.com",
+  "sarika@ferguson4me.com",
+  "ian@ferguson4me.com",
+] as const;
+
+export function isEditableReportType(value: string): value is EditableReportType {
+  return (EDITABLE_REPORT_TYPES as readonly string[]).includes(value);
+}
+
 export const REPORT_TYPE_LABELS: Record<ReportType, string> = {
   sales_pipeline: "Sales & Marketing",
   enrolment_milestones: "Enrolment & Finance",

@@ -97,10 +97,23 @@ export default async function AdminPage() {
       <section className="mt-6 rounded-lg border border-slate-200 bg-white p-4">
         <h2 className="mb-2 text-sm font-semibold text-dark">Role Management</h2>
         <p className="text-sm text-slate-600">
-          Assign <code className="font-mono text-xs">admin</code> or{" "}
-          <code className="font-mono text-xs">viewer</code> roles via Clerk user
-          public metadata (<code className="font-mono text-xs">role</code> key).
-          Admin users: Ian Ferguson, Sarika Ferguson, Oliver Barany.
+          Assign roles via Clerk user public metadata (
+          <code className="font-mono text-xs">role</code> key):
+        </p>
+        <ul className="mt-2 list-inside list-disc text-sm text-slate-600">
+          <li>
+            <code className="font-mono text-xs">admin</code> — bulk CSV upload, Zoho sync, full access
+          </li>
+          <li>
+            <code className="font-mono text-xs">editor</code> — spreadsheet data entry (requires approval)
+          </li>
+          <li>
+            <code className="font-mono text-xs">viewer</code> — read-only dashboards (default)
+          </li>
+        </ul>
+        <p className="mt-3 text-sm text-slate-600">
+          Approvers are matched by email: oliver@ferguson4me.com, sarika@ferguson4me.com,
+          ian@ferguson4me.com — no extra Clerk role required.
         </p>
       </section>
     </DashboardShell>

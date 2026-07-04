@@ -1,13 +1,29 @@
 import Image from "next/image";
 import Link from "next/link";
-import { getSessionUser, isDemoMode } from "@/lib/auth";
+import {
+  canAccessDataEntry,
+  canApproveSubmissions,
+  getSessionUser,
+  isDemoMode,
+} from "@/lib/auth";
 import { MobileNav } from "./mobile-nav";
 import { SidebarNav } from "./sidebar-nav";
 import { UserMenu } from "./user-menu";
 
+function buildNavPermissions(user: Awaited<ReturnType<typeof getSessionUser>>) {
+  if (!user) {
+    return { isAdmin: false, canAccessDataEntry: false, canApprove: false };
+  }
+  return {
+    isAdmin: user.role === "admin",
+    canAccessDataEntry: canAccessDataEntry(user),
+    canApprove: canApproveSubmissions(user),
+  };
+}
+
 export async function Sidebar() {
   const user = await getSessionUser();
-  const isAdmin = user?.role === "admin";
+  const permissions = buildNavPermissions(user);
 
   return (
     <aside className="hidden w-72 shrink-0 border-r border-white/70 bg-white/55 shadow-[12px_0_55px_rgba(31,42,61,0.06)] backdrop-blur-2xl lg:flex lg:flex-col">
@@ -26,7 +42,7 @@ export async function Sidebar() {
           </div>
         </Link>
       </div>
-      <SidebarNav isAdmin={isAdmin} />
+      <SidebarNav permissions={permissions} />
     </aside>
   );
 }
@@ -34,14 +50,14 @@ export async function Sidebar() {
 export async function TopBar() {
   const user = await getSessionUser();
   const demoMode = isDemoMode();
-  const isAdmin = user?.role === "admin";
+  const permissions = buildNavPermissions(user);
 
   return (
     <header className="sticky top-0 z-20 border-b border-white/70 bg-white/55 shadow-[0_12px_40px_rgba(31,42,61,0.05)] backdrop-blur-2xl">
       <div className="flex min-h-20 items-center justify-between gap-3 px-5 py-4 sm:px-8">
         <div className="flex min-w-0 items-center gap-3">
           <div className="flex items-center gap-3 lg:hidden">
-            <MobileNav isAdmin={isAdmin} />
+            <MobileNav permissions={permissions} />
             <Image
               src="/ferguson-logo.png"
               alt="Ferguson"
@@ -68,6 +84,16 @@ export async function TopBar() {
               {user.role === "admin" && (
                 <span className="rounded-full border border-white/80 bg-white/50 px-3 py-1 text-sm font-black text-emerald-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-xl ring-1 ring-emerald-100/70">
                   Admin
+                </span>
+              )}
+              {user.role === "editor" && (
+                <span className="rounded-full border border-white/80 bg-white/50 px-3 py-1 text-sm font-black text-sky-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-xl ring-1 ring-sky-100/70">
+                  Editor
+                </span>
+              )}
+              {user.isApprover && user.role !== "admin" && (
+                <span className="rounded-full border border-white/80 bg-white/50 px-3 py-1 text-sm font-black text-orange-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-xl ring-1 ring-orange-100/70">
+                  Approver
                 </span>
               )}
             </>

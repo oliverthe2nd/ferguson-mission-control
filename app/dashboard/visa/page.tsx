@@ -2,6 +2,7 @@ import { PageHeader } from "@/components/layout/app-shell";
 import {
   LodgementTrendChart,
   PendingActionsChart,
+  RefusalTrendChart,
   SubclassBreakdownChart,
 } from "@/components/charts/visa-charts";
 import { ChartCard } from "@/components/dashboard/chart-card";
@@ -58,6 +59,13 @@ export default async function VisaDashboardPage() {
             tall
           >
             <LodgementTrendChart data={rows} />
+          </ChartCard>
+          <ChartCard
+            title="Refusal Trend"
+            subtitle="Monthly refused count — defaults to current year"
+            tall
+          >
+            <RefusalTrendChart data={rows} />
           </ChartCard>
           <ChartCard
             title="Pending Actions by Week"

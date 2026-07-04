@@ -67,18 +67,38 @@ function SubclassBreakdownChartInner({
 }
 
 function aggregateLodgedByMonth(rows: VisaLodgementRow[]) {
+  return aggregateMetricByMonth(rows, "lodged_count", "lodged") as Array<{
+    monthKey: string;
+    period: string;
+    lodged: number;
+  }>;
+}
+
+function aggregateRefusedByMonth(rows: VisaLodgementRow[]) {
+  return aggregateMetricByMonth(rows, "refused_count", "refused") as Array<{
+    monthKey: string;
+    period: string;
+    refused: number;
+  }>;
+}
+
+function aggregateMetricByMonth(
+  rows: VisaLodgementRow[],
+  field: "lodged_count" | "refused_count",
+  outputKey: "lodged" | "refused",
+) {
   const byMonth = rows.reduce<Record<string, number>>((acc, row) => {
     const key = monthKey(row.period);
     if (key === "unknown") return acc;
-    acc[key] = (acc[key] ?? 0) + Number(row.lodged_count) || 0;
+    acc[key] = (acc[key] ?? 0) + Number(row[field]) || 0;
     return acc;
   }, {});
 
   return Object.entries(byMonth)
-    .map(([key, lodged]) => ({
+    .map(([key, value]) => ({
       monthKey: key,
       period: monthLabelFromKey(key),
-      lodged,
+      [outputKey]: value,
     }))
     .sort((a, b) => a.monthKey.localeCompare(b.monthKey));
 }
@@ -224,6 +244,104 @@ function LodgementTrendChartInner({
   );
 }
 
+function RefusalTrendChartInner({
+  data,
+  loading,
+}: {
+  data: VisaLodgementRow[];
+  loading?: boolean;
+}) {
+  const availableYears = useMemo(() => {
+    const years = new Set<number>();
+    for (const row of data) {
+      const key = monthKey(row.period);
+      if (key !== "unknown") years.add(Number(key.slice(0, 4)));
+    }
+    return [...years].sort((a, b) => a - b);
+  }, [data]);
+
+  const currentYear = new Date().getFullYear();
+  const [selectedYear, setSelectedYear] = useState<number | "all">(
+    availableYears.includes(currentYear) ? currentYear : "all",
+  );
+
+  useEffect(() => {
+    setSelectedYear(availableYears.includes(currentYear) ? currentYear : "all");
+  }, [availableYears, currentYear]);
+
+  const filteredRows = useMemo(() => {
+    if (selectedYear === "all") return data;
+    return data.filter((row) => monthKey(row.period).startsWith(String(selectedYear)));
+  }, [data, selectedYear]);
+
+  const chartData = useMemo(() => {
+    const aggregated = aggregateRefusedByMonth(filteredRows);
+    if (selectedYear === "all") return aggregated;
+    return aggregated.map((row) => ({
+      ...row,
+      period: monthOnlyLabelFromKey(row.monthKey),
+    }));
+  }, [filteredRows, selectedYear]);
+
+  const totalRefused = chartData.reduce((sum, row) => sum + row.refused, 0);
+  const denseAxis = selectedYear === "all" && chartData.length > 12;
+  const xAxisHeight = denseAxis ? 56 : 36;
+  const chartBottomMargin = denseAxis ? 52 : 24;
+
+  if (loading) return <ChartSkeleton />;
+  if (data.length === 0) return <EmptyState />;
+  if (chartData.length === 0 || totalRefused === 0) {
+    return (
+      <>
+        <YearFilter
+          years={availableYears}
+          selectedYear={selectedYear}
+          onChange={setSelectedYear}
+        />
+        <EmptyState message={`No refusals recorded for ${selectedYear}`} />
+      </>
+    );
+  }
+
+  return (
+    <div className="flex h-full min-h-0 flex-col">
+      <YearFilter
+        years={availableYears}
+        selectedYear={selectedYear}
+        onChange={setSelectedYear}
+      />
+      <div className="min-h-0 flex-1">
+        <ChartFrame>
+          <BarChart
+            data={chartData}
+            margin={{ ...CHART_MARGIN, left: 0, bottom: chartBottomMargin }}
+            barCategoryGap="24%"
+          >
+            <ChartGrid />
+            <ChartXAxis
+              dataKey="period"
+              interval={0}
+              minTickGap={0}
+              angle={denseAxis ? -40 : 0}
+              textAnchor={denseAxis ? "end" : "middle"}
+              height={xAxisHeight}
+              tick={{ ...AXIS_TICK, fontSize: denseAxis ? 11 : 12 }}
+            />
+            <ChartYAxis allowDecimals={false} width={36} />
+            <ChartTooltip />
+            <Bar
+              dataKey="refused"
+              name="Refused"
+              fill={CHART_COLORS.alert}
+              radius={BAR_RADIUS}
+            />
+          </BarChart>
+        </ChartFrame>
+      </div>
+    </div>
+  );
+}
+
 function PendingActionsChartInner({
   data,
   loading,
@@ -273,6 +391,10 @@ export function SubclassBreakdownChart(props: { data: VisaLodgementRow[]; loadin
 
 export function LodgementTrendChart(props: { data: VisaLodgementRow[]; loading?: boolean }) {
   return <ChartErrorBoundary><LodgementTrendChartInner {...props} /></ChartErrorBoundary>;
+}
+
+export function RefusalTrendChart(props: { data: VisaLodgementRow[]; loading?: boolean }) {
+  return <ChartErrorBoundary><RefusalTrendChartInner {...props} /></ChartErrorBoundary>;
 }
 
 export function PendingActionsChart(props: { data: VisaLodgementRow[]; loading?: boolean }) {

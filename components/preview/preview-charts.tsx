@@ -28,6 +28,7 @@ import {
 import {
   LodgementTrendChart,
   PendingActionsChart,
+  RefusalTrendChart,
   SubclassBreakdownChart,
 } from "@/components/charts/visa-charts";
 import { ChartCard, Section } from "@/components/dashboard/chart-card";
@@ -106,8 +107,15 @@ export function PreviewCharts() {
             <LodgementTrendChart data={sampleVisa} />
           </ChartCard>
           <ChartCard
+            title="Refusal Trend"
+            subtitle="Bar · monthly refused count (chronological)"
+          >
+            <RefusalTrendChart data={sampleVisa} />
+          </ChartCard>
+          <ChartCard
             title="Pending Actions"
             subtitle="Bar · pending actions by week"
+            className="lg:col-span-2"
           >
             <PendingActionsChart data={sampleVisa} />
           </ChartCard>

@@ -1,7 +1,9 @@
 import { redirect } from "next/navigation";
+import { ZohoSalesSyncButton } from "@/components/admin/zoho-sales-sync";
 import { PageHeader } from "@/components/layout/app-shell";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { requireAdmin } from "@/lib/auth";
+import { isZohoConfigured } from "@/lib/zoho/config";
 import { formatDate } from "@/lib/format";
 import { getUploadHistory } from "@/lib/queries";
 import { REPORT_TYPE_LABELS, type ReportType } from "@/lib/constants";
@@ -65,6 +67,25 @@ export default async function AdminPage() {
               </tbody>
             </table>
           </div>
+        )}
+      </section>
+
+      <section className="mt-6 rounded-lg border border-slate-200 bg-white p-4">
+        <h2 className="mb-2 text-sm font-semibold text-dark">Zoho CRM Sync</h2>
+        {isZohoConfigured() ? (
+          <>
+            <p className="mb-4 text-sm text-slate-600">
+              Pull the last 12 weeks of leads and deal stage history into Sales
+              &amp; Marketing. This creates a new upload snapshot in Neon.
+            </p>
+            <ZohoSalesSyncButton />
+          </>
+        ) : (
+          <p className="text-sm text-slate-600">
+            Add Zoho OAuth credentials to{" "}
+            <code className="font-mono text-xs">.env.local</code> to enable
+            automatic sales pipeline sync.
+          </p>
         )}
       </section>
 

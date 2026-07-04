@@ -9,7 +9,9 @@
     "lint": "eslint",
     "db:push": "node --env-file=.env.local ./node_modules/drizzle-kit/bin.cjs push",
     "db:studio": "node --env-file=.env.local ./node_modules/drizzle-kit/bin.cjs studio",
-    "seed:uploads": "npx tsx --env-file=.env.local scripts/seed-uploads.ts"
+    "seed:uploads": "npx tsx --env-file=.env.local scripts/seed-uploads.ts",
+    "sync:zoho:sales": "npx tsx --env-file=.env.local scripts/sync-zoho-sales.ts",
+    "check:zoho": "npx tsx --env-file=.env.local scripts/check-zoho-permissions.ts"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.5.12",

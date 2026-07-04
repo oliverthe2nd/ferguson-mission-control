@@ -1,12 +1,14 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import { Area, AreaChart, Bar, BarChart, Cell } from "recharts";
 import { ChartErrorBoundary } from "@/components/ui/chart-error-boundary";
 import { ChartSkeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CHART_COLORS } from "@/lib/constants";
-import { formatMonthYear, monthKey } from "@/lib/format";
+import { monthKey, monthLabelFromKey } from "@/lib/format";
 import type { VisaLodgementRow } from "@/lib/validators/visa-lodgement";
+import { cn } from "@/lib/utils";
 import {
   AreaGradient,
   BAR_RADIUS,
@@ -32,7 +34,7 @@ function SubclassBreakdownChartInner({
   if (data.length === 0) return <EmptyState />;
 
   const bySubclass = data.reduce<Record<string, number>>((acc, row) => {
-    acc[row.visa_subclass] = (acc[row.visa_subclass] ?? 0) + row.lodged_count;
+    acc[row.visa_subclass] = (acc[row.visa_subclass] ?? 0) + (Number(row.lodged_count) || 0);
     return acc;
   }, {});
 
@@ -63,6 +65,65 @@ function SubclassBreakdownChartInner({
   );
 }
 
+function aggregateLodgedByMonth(rows: VisaLodgementRow[]) {
+  const byMonth = rows.reduce<Record<string, number>>((acc, row) => {
+    const key = monthKey(row.period);
+    if (key === "unknown") return acc;
+    acc[key] = (acc[key] ?? 0) + Number(row.lodged_count) || 0;
+    return acc;
+  }, {});
+
+  return Object.entries(byMonth)
+    .map(([key, lodged]) => ({
+      monthKey: key,
+      period: monthLabelFromKey(key),
+      lodged,
+    }))
+    .sort((a, b) => a.monthKey.localeCompare(b.monthKey));
+}
+
+function YearFilter({
+  years,
+  selectedYear,
+  onChange,
+}: {
+  years: number[];
+  selectedYear: number | "all";
+  onChange: (year: number | "all") => void;
+}) {
+  return (
+    <div className="mb-3 flex flex-wrap gap-2">
+      {years.map((year) => (
+        <button
+          key={year}
+          type="button"
+          onClick={() => onChange(year)}
+          className={cn(
+            "rounded-full border px-3 py-1 text-xs font-bold transition",
+            selectedYear === year
+              ? "border-emerald-300 bg-emerald-50 text-emerald-800"
+              : "border-white/80 bg-white/50 text-slate-600 hover:border-emerald-200 hover:text-emerald-700",
+          )}
+        >
+          {year}
+        </button>
+      ))}
+      <button
+        type="button"
+        onClick={() => onChange("all")}
+        className={cn(
+          "rounded-full border px-3 py-1 text-xs font-bold transition",
+          selectedYear === "all"
+            ? "border-emerald-300 bg-emerald-50 text-emerald-800"
+            : "border-white/80 bg-white/50 text-slate-600 hover:border-emerald-200 hover:text-emerald-700",
+        )}
+      >
+        All years
+      </button>
+    </div>
+  );
+}
+
 function LodgementTrendChartInner({
   data,
   loading,
@@ -70,43 +131,79 @@ function LodgementTrendChartInner({
   data: VisaLodgementRow[];
   loading?: boolean;
 }) {
+  const availableYears = useMemo(() => {
+    const years = new Set<number>();
+    for (const row of data) {
+      const key = monthKey(row.period);
+      if (key !== "unknown") years.add(Number(key.slice(0, 4)));
+    }
+    return [...years].sort((a, b) => a - b);
+  }, [data]);
+
+  const currentYear = new Date().getFullYear();
+  const defaultYear = availableYears.includes(currentYear) ? currentYear : "all";
+  const [selectedYear, setSelectedYear] = useState<number | "all">(defaultYear);
+
+  useEffect(() => {
+    setSelectedYear(availableYears.includes(currentYear) ? currentYear : "all");
+  }, [availableYears, currentYear]);
+
+  const filteredRows = useMemo(() => {
+    if (selectedYear === "all") return data;
+    return data.filter((row) => monthKey(row.period).startsWith(String(selectedYear)));
+  }, [data, selectedYear]);
+
+  const chartData = useMemo(() => aggregateLodgedByMonth(filteredRows), [filteredRows]);
+
   if (loading) return <ChartSkeleton />;
   if (data.length === 0) return <EmptyState />;
-
-  const byMonth = data.reduce<Record<string, number>>((acc, row) => {
-    const key = monthKey(row.period);
-    acc[key] = (acc[key] ?? 0) + row.lodged_count;
-    return acc;
-  }, {});
-
-  const chartData = Object.entries(byMonth)
-    .map(([key, lodged]) => ({
-      monthKey: key,
-      period: formatMonthYear(new Date(`${key}-01T00:00:00`)),
-      lodged,
-    }))
-    .sort((a, b) => a.monthKey.localeCompare(b.monthKey));
+  if (chartData.length === 0) {
+    return (
+      <>
+        <YearFilter
+          years={availableYears}
+          selectedYear={selectedYear}
+          onChange={setSelectedYear}
+        />
+        <EmptyState message={`No lodgements recorded for ${selectedYear}`} />
+      </>
+    );
+  }
 
   return (
-    <ChartFrame>
-      <AreaChart data={chartData} margin={{ ...CHART_MARGIN, bottom: 8 }}>
-        <AreaGradient id="visaLodged" color={CHART_COLORS.primary} />
-        <ChartGrid />
-        <ChartXAxis dataKey="period" interval="preserveStartEnd" minTickGap={28} />
-        <ChartYAxis allowDecimals={false} />
-        <ChartTooltip />
-        <Area
-          type="monotone"
-          dataKey="lodged"
-          name="Lodged"
-          stroke={CHART_COLORS.primary}
-          strokeWidth={4}
-          fill="url(#visaLodged)"
-          dot={{ ...LINE_PROPS.dot, fill: CHART_COLORS.primary }}
-          activeDot={LINE_PROPS.activeDot}
-        />
-      </AreaChart>
-    </ChartFrame>
+    <>
+      <YearFilter
+        years={availableYears}
+        selectedYear={selectedYear}
+        onChange={setSelectedYear}
+      />
+      <ChartFrame>
+        <AreaChart data={chartData} margin={{ ...CHART_MARGIN, bottom: 8 }}>
+          <AreaGradient id="visaLodged" color={CHART_COLORS.primary} />
+          <ChartGrid />
+          <ChartXAxis
+            dataKey="period"
+            interval={selectedYear === "all" ? "preserveStartEnd" : 0}
+            minTickGap={selectedYear === "all" ? 28 : 8}
+            angle={selectedYear === "all" ? 0 : -35}
+            textAnchor={selectedYear === "all" ? "middle" : "end"}
+            height={selectedYear === "all" ? 30 : 50}
+          />
+          <ChartYAxis allowDecimals={false} />
+          <ChartTooltip />
+          <Area
+            type="monotone"
+            dataKey="lodged"
+            name="Lodged"
+            stroke={CHART_COLORS.primary}
+            strokeWidth={4}
+            fill="url(#visaLodged)"
+            dot={{ ...LINE_PROPS.dot, fill: CHART_COLORS.primary }}
+            activeDot={LINE_PROPS.activeDot}
+          />
+        </AreaChart>
+      </ChartFrame>
+    </>
   );
 }
 
@@ -122,14 +219,15 @@ function PendingActionsChartInner({
 
   const byMonth = data.reduce<Record<string, number>>((acc, row) => {
     const key = monthKey(row.period);
-    acc[key] = (acc[key] ?? 0) + row.pending_actions_count;
+    if (key === "unknown") return acc;
+    acc[key] = (acc[key] ?? 0) + (Number(row.pending_actions_count) || 0);
     return acc;
   }, {});
 
   const chartData = Object.entries(byMonth)
     .map(([key, pending]) => ({
       monthKey: key,
-      period: formatMonthYear(new Date(`${key}-01T00:00:00`)),
+      period: monthLabelFromKey(key),
       pending,
     }))
     .sort((a, b) => a.monthKey.localeCompare(b.monthKey))

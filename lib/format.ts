@@ -59,9 +59,27 @@ export function formatMonthYear(value: Date | string): string {
   return date.toLocaleDateString("en-AU", { month: "short", year: "numeric" });
 }
 
+/** Stable YYYY-MM bucket from report period dates (avoids timezone month shifts). */
 export function monthKey(value: Date | string): string {
-  const date = typeof value === "string" ? new Date(value) : value;
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  return `${year}-${month}`;
+  if (typeof value === "string") {
+    const match = value.match(/^(\d{4})-(\d{2})/);
+    if (match) return `${match[1]}-${match[2]}`;
+  }
+
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return "unknown";
+
+  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
+}
+
+export function monthLabelFromKey(key: string): string {
+  const match = key.match(/^(\d{4})-(\d{2})$/);
+  if (!match) return key;
+
+  const date = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, 1));
+  return date.toLocaleDateString("en-AU", {
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  });
 }

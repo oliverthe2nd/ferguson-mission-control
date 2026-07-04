@@ -54,7 +54,8 @@ export default async function VisaDashboardPage() {
           </ChartCard>
           <ChartCard
             title="Lodgement Trend"
-            subtitle="Monthly lodged count, oldest to newest"
+            subtitle="Monthly lodged count — defaults to current year"
+            tall
           >
             <LodgementTrendChart data={rows} />
           </ChartCard>

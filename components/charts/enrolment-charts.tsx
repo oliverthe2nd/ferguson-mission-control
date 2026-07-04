@@ -1,6 +1,6 @@
 "use client";
 
-import { Bar, BarChart, Cell, Line, LineChart } from "recharts";
+import { Bar, BarChart, Cell, LabelList, ReferenceLine } from "recharts";
 import { ChartErrorBoundary } from "@/components/ui/chart-error-boundary";
 import { ChartSkeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -8,6 +8,7 @@ import { isStudentAtRisk } from "@/lib/alerts";
 import { CHART_COLORS } from "@/lib/constants";
 import type { EnrolmentMilestoneRow } from "@/lib/validators/enrolment-milestones";
 import {
+  AXIS_TICK,
   BAR_RADIUS,
   BAR_RADIUS_H,
   CHART_MARGIN,
@@ -16,7 +17,6 @@ import {
   ChartTooltip,
   ChartXAxis,
   ChartYAxis,
-  LINE_PROPS,
   SERIES_COLORS,
 } from "./chart-theme";
 
@@ -119,21 +119,75 @@ function AvgDaysPerStageChartInner({
     return { stage: label, avgDays: Number(avg.toFixed(1)) };
   });
 
+  const overallAvg =
+    chartData.length > 0
+      ? chartData.reduce((sum, row) => sum + row.avgDays, 0) / chartData.length
+      : 0;
+  const barMax = Math.max(...chartData.map((row) => row.avgDays), 0);
+  const yMax = barMax === 0 ? 10 : Math.ceil(barMax * 1.06);
+
+  const formatDays = (value: number) =>
+    Number.isInteger(value) ? String(value) : value.toFixed(1);
+
   return (
     <ChartFrame>
-      <LineChart data={chartData} margin={CHART_MARGIN}>
+      <BarChart
+        data={chartData}
+        margin={{ top: 28, right: 28, left: 8, bottom: 52 }}
+        barCategoryGap="28%"
+      >
         <ChartGrid />
-        <ChartXAxis dataKey="stage" interval={0} angle={-12} textAnchor="end" height={56} />
-        <ChartYAxis allowDecimals={false} />
-        <ChartTooltip valueFormatter={(v) => `${v} days`} />
-        <Line
-          {...LINE_PROPS}
-          dataKey="avgDays"
-          name="Avg Days"
-          stroke={CHART_COLORS.secondary}
-          dot={{ ...LINE_PROPS.dot, fill: CHART_COLORS.secondary }}
+        <ChartXAxis
+          dataKey="stage"
+          interval={0}
+          tick={{ ...AXIS_TICK, fontSize: 10 }}
+          height={52}
         />
-      </LineChart>
+        <ChartYAxis
+          allowDecimals={false}
+          domain={[0, yMax]}
+          width={44}
+          label={{
+            value: "Days",
+            angle: -90,
+            position: "insideLeft",
+            offset: 12,
+            style: {
+              fill: CHART_COLORS.muted,
+              fontSize: 12,
+              fontWeight: 600,
+              textAnchor: "middle",
+            },
+          }}
+        />
+        <ChartTooltip valueFormatter={(v) => `${formatDays(v)} days`} />
+        <ReferenceLine
+          y={overallAvg}
+          stroke={CHART_COLORS.muted}
+          strokeDasharray="6 4"
+          strokeWidth={2}
+          label={{
+            value: "Avg",
+            position: "right",
+            fill: CHART_COLORS.muted,
+            fontSize: 11,
+            fontWeight: 700,
+          }}
+        />
+        <Bar
+          dataKey="avgDays"
+          name="Days"
+          fill={CHART_COLORS.secondary}
+          radius={BAR_RADIUS}
+        >
+          <LabelList
+            dataKey="avgDays"
+            position="top"
+            formatter={(value) => formatDays(Number(value))}
+            style={{ fill: CHART_COLORS.dark, fontSize: 11, fontWeight: 700 }}
+          />
+        </Bar>
+      </BarChart>
     </ChartFrame>
   );
 }

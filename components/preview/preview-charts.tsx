@@ -84,7 +84,7 @@ export function PreviewCharts() {
           </ChartCard>
           <ChartCard
             title="Avg Days per Stage"
-            subtitle="Bar · avg days per milestone stage"
+            subtitle="Horizontal bar · avg days per milestone stage"
           >
             <AvgDaysPerStageChart data={sampleEnrolment} />
           </ChartCard>

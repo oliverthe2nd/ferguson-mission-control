@@ -8,7 +8,6 @@ import { isStudentAtRisk } from "@/lib/alerts";
 import { CHART_COLORS } from "@/lib/constants";
 import type { EnrolmentMilestoneRow } from "@/lib/validators/enrolment-milestones";
 import {
-  AXIS_TICK,
   BAR_RADIUS,
   BAR_RADIUS_H,
   CHART_MARGIN,
@@ -124,7 +123,7 @@ function AvgDaysPerStageChartInner({
       ? chartData.reduce((sum, row) => sum + row.avgDays, 0) / chartData.length
       : 0;
   const barMax = Math.max(...chartData.map((row) => row.avgDays), 0);
-  const yMax = barMax === 0 ? 10 : Math.ceil(barMax * 1.06);
+  const xMax = barMax === 0 ? 10 : Math.ceil(barMax * 1.14);
 
   const formatDays = (value: number) =>
     Number.isInteger(value) ? String(value) : value.toFixed(1);
@@ -133,42 +132,41 @@ function AvgDaysPerStageChartInner({
     <ChartFrame>
       <BarChart
         data={chartData}
-        margin={{ top: 28, right: 28, left: 8, bottom: 52 }}
-        barCategoryGap="28%"
+        layout="vertical"
+        margin={{ ...CHART_MARGIN, left: 8, right: 12, bottom: 22 }}
+        barCategoryGap="22%"
       >
-        <ChartGrid />
+        <ChartGrid vertical />
         <ChartXAxis
-          dataKey="stage"
-          interval={0}
-          tick={{ ...AXIS_TICK, fontSize: 10 }}
-          height={52}
-        />
-        <ChartYAxis
+          type="number"
           allowDecimals={false}
-          domain={[0, yMax]}
-          width={44}
+          domain={[0, xMax]}
           label={{
             value: "Days",
-            angle: -90,
-            position: "insideLeft",
-            offset: 12,
+            position: "insideBottom",
+            offset: -4,
             style: {
               fill: CHART_COLORS.muted,
               fontSize: 12,
               fontWeight: 600,
-              textAnchor: "middle",
             },
           }}
         />
+        <ChartYAxis
+          type="category"
+          dataKey="stage"
+          width={118}
+          tick={{ fontSize: 11 }}
+        />
         <ChartTooltip valueFormatter={(v) => `${formatDays(v)} days`} />
         <ReferenceLine
-          y={overallAvg}
+          x={overallAvg}
           stroke={CHART_COLORS.muted}
           strokeDasharray="6 4"
           strokeWidth={2}
           label={{
             value: "Avg",
-            position: "right",
+            position: "insideTopRight",
             fill: CHART_COLORS.muted,
             fontSize: 11,
             fontWeight: 700,
@@ -177,12 +175,13 @@ function AvgDaysPerStageChartInner({
         <Bar
           dataKey="avgDays"
           name="Days"
-          fill={CHART_COLORS.secondary}
-          radius={BAR_RADIUS}
+          fill={CHART_COLORS.primary}
+          radius={BAR_RADIUS_H}
         >
           <LabelList
             dataKey="avgDays"
-            position="top"
+            position="right"
+            offset={6}
             formatter={(value) => formatDays(Number(value))}
             style={{ fill: CHART_COLORS.dark, fontSize: 11, fontWeight: 700 }}
           />

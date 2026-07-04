@@ -12,7 +12,7 @@ import { formatOptionalDate } from "@/lib/format";
 import type { EnrolmentMilestoneRow } from "@/lib/validators/enrolment-milestones";
 
 export default async function EnrolmentDashboardPage() {
-  const { rows, hasDatabase, usingSampleData } =
+  const { rows, hasDatabase, usingSampleData, lastUploadLabel } =
     await getPillarData<EnrolmentMilestoneRow>("enrolment_milestones");
 
   const sortedRows = [...rows].sort((a, b) => {
@@ -29,6 +29,7 @@ export default async function EnrolmentDashboardPage() {
       <PageHeader
         title="Enrolment & Finance"
         description="Milestone tracker — consultation fees through to final payment"
+        lastUploadLabel={!usingSampleData ? lastUploadLabel : null}
       />
       {!hasDatabase && !usingSampleData && (
         <p className="mb-4 text-sm font-medium text-amber-700">Database not configured.</p>
@@ -45,7 +46,7 @@ export default async function EnrolmentDashboardPage() {
       )}
       {!usingSampleData && rows.length > 0 && (
         <p className="mb-4 text-sm font-medium text-slate-600">
-          Latest upload: {rows.length} students in cohort.
+          {rows.length} students in latest cohort.
         </p>
       )}
       {rows.length === 0 ? (

@@ -2,12 +2,12 @@ import { buildAlertTray, getArStatus, getSalesRag, getVisaAlerts, isStudentAtRis
 import type { ReportType } from "./constants";
 import { KPI, PILLAR_ROUTES, REPORT_TYPE_LABELS } from "./constants";
 import { normalizeEnrolmentRows } from "./enrolment-dates";
-import { formatAud, formatDate, formatPct } from "./format";
+import { formatAud, formatDateTime, formatLastUpload, formatPct } from "./format";
 import {
   flattenSnapshotRows,
   getLastUpdatedByPillar,
   getLatestSnapshots,
-  getSnapshotsFromLatestUpload,
+  getLatestUploadSnapshots,
 } from "./queries";
 import { getAllSampleData, getSampleRows } from "./sample-rows";
 import type { AccountsReceivableRow } from "./validators/accounts-receivable";
@@ -65,7 +65,7 @@ function buildOverviewCards(input: OverviewInput) {
         (value) => ({ value }),
       ),
       lastUpdated: lastUpdated.get("sales_pipeline")
-        ? formatDate(lastUpdated.get("sales_pipeline")!)
+        ? formatDateTime(lastUpdated.get("sales_pipeline")!)
         : undefined,
     },
     {
@@ -76,7 +76,7 @@ function buildOverviewCards(input: OverviewInput) {
       status: atRiskCount > 0 ? ("red" as const) : ("green" as const),
       sparklineData: [{ value: atRiskCount }],
       lastUpdated: lastUpdated.get("enrolment_milestones")
-        ? formatDate(lastUpdated.get("enrolment_milestones")!)
+        ? formatDateTime(lastUpdated.get("enrolment_milestones")!)
         : undefined,
     },
     {
@@ -93,7 +93,7 @@ function buildOverviewCards(input: OverviewInput) {
         (value) => ({ value }),
       ),
       lastUpdated: lastUpdated.get("visa_lodgement")
-        ? formatDate(lastUpdated.get("visa_lodgement")!)
+        ? formatDateTime(lastUpdated.get("visa_lodgement")!)
         : undefined,
     },
     {
@@ -104,7 +104,7 @@ function buildOverviewCards(input: OverviewInput) {
       status: urgentAr > 0 ? ("amber" as const) : ("green" as const),
       sparklineData: [{ value: totalAr }],
       lastUpdated: lastUpdated.get("accounts_receivable")
-        ? formatDate(lastUpdated.get("accounts_receivable")!)
+        ? formatDateTime(lastUpdated.get("accounts_receivable")!)
         : undefined,
     },
     {
@@ -117,7 +117,7 @@ function buildOverviewCards(input: OverviewInput) {
         (value) => ({ value }),
       ),
       lastUpdated: lastUpdated.get("job_placement")
-        ? formatDate(lastUpdated.get("job_placement")!)
+        ? formatDateTime(lastUpdated.get("job_placement")!)
         : undefined,
     },
     {
@@ -128,7 +128,7 @@ function buildOverviewCards(input: OverviewInput) {
       status: "green" as const,
       sparklineData: (centresSparkline ?? [latestCentres]).map((value) => ({ value })),
       lastUpdated: lastUpdated.get("study_centres")
-        ? formatDate(lastUpdated.get("study_centres")!)
+        ? formatDateTime(lastUpdated.get("study_centres")!)
         : undefined,
     },
   ];
@@ -158,7 +158,7 @@ export async function getDashboardOverview() {
   try {
     const [
       salesSnapshots,
-      enrolmentSnapshots,
+      enrolmentUploadResult,
       visaSnapshots,
       accountsSnapshots,
       placementSnapshots,
@@ -166,7 +166,7 @@ export async function getDashboardOverview() {
       lastUpdated,
     ] = await Promise.all([
       getLatestSnapshots("sales_pipeline", 8),
-      getSnapshotsFromLatestUpload("enrolment_milestones"),
+      getLatestUploadSnapshots("enrolment_milestones"),
       getLatestSnapshots("visa_lodgement", 8),
       getLatestSnapshots("accounts_receivable", 1),
       getLatestSnapshots("job_placement", 8),
@@ -175,6 +175,7 @@ export async function getDashboardOverview() {
     ]);
 
     const sales = flattenSnapshotRows<SalesPipelineRow>(salesSnapshots);
+    const { snapshots: enrolmentSnapshots } = enrolmentUploadResult;
     const enrolment = normalizeEnrolmentRows(
       flattenSnapshotRows<EnrolmentMilestoneRow>(enrolmentSnapshots),
     );
@@ -247,17 +248,19 @@ export async function getPillarData<T>(reportType: ReportType) {
           : sampleRows,
       hasDatabase: false,
       usingSampleData: sampleRows.length > 0,
+      lastUploadLabel: null,
     };
   }
 
   try {
-    const snapshots = await getSnapshotsFromLatestUpload(reportType);
+    const { snapshots, upload } = await getLatestUploadSnapshots(reportType);
     let rows = flattenSnapshotRows<T>(snapshots);
     if (reportType === "enrolment_milestones" && rows.length > 0) {
       rows = normalizeEnrolmentRows(rows as EnrolmentMilestoneRow[]) as T[];
     }
+    const lastUploadLabel = formatLastUpload(upload);
     if (rows.length > 0) {
-      return { rows, hasDatabase: true, usingSampleData: false };
+      return { rows, hasDatabase: true, usingSampleData: false, lastUploadLabel };
     }
     return {
       rows:
@@ -266,6 +269,7 @@ export async function getPillarData<T>(reportType: ReportType) {
           : sampleRows,
       hasDatabase: true,
       usingSampleData: sampleRows.length > 0,
+      lastUploadLabel: null,
     };
   } catch {
     return {
@@ -275,6 +279,7 @@ export async function getPillarData<T>(reportType: ReportType) {
           : sampleRows,
       hasDatabase: false,
       usingSampleData: sampleRows.length > 0,
+      lastUploadLabel: null,
     };
   }
 }

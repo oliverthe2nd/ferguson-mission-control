@@ -77,9 +77,11 @@ export async function TopBar() {
 export function PageHeader({
   title,
   description,
+  lastUploadLabel,
 }: {
   title: string;
   description?: string;
+  lastUploadLabel?: string | null;
 }) {
   return (
     <div className="mb-6">
@@ -89,6 +91,11 @@ export function PageHeader({
       {description && (
         <p className="mt-2 text-base font-medium leading-7 text-slate-600">
           {description}
+        </p>
+      )}
+      {lastUploadLabel && (
+        <p className="mt-2 text-sm font-medium text-slate-500">
+          Last upload: {lastUploadLabel}
         </p>
       )}
     </div>

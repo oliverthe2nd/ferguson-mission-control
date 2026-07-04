@@ -10,13 +10,14 @@ import { getPillarData } from "@/lib/dashboard-data";
 import type { SalesPipelineRow } from "@/lib/validators/sales-pipeline";
 
 export default async function SalesDashboardPage() {
-  const { rows, hasDatabase, usingSampleData } = await getPillarData<SalesPipelineRow>("sales_pipeline");
+  const { rows, hasDatabase, usingSampleData, lastUploadLabel } = await getPillarData<SalesPipelineRow>("sales_pipeline");
 
   return (
     <>
       <PageHeader
         title="Sales & Marketing"
         description="Pipeline conversion — weekly lead source and conversion tracking"
+        lastUploadLabel={!usingSampleData ? lastUploadLabel : null}
       />
       {!hasDatabase && !usingSampleData && (
         <p className="mb-4 text-sm font-medium text-amber-700">Database not configured.</p>

@@ -48,7 +48,7 @@ export function DashboardCard({
         <SummarySparkline data={sparklineData} />
       </div>
       {lastUpdated && (
-        <p className="mt-3 text-xs text-slate-400">Updated {lastUpdated}</p>
+        <p className="mt-3 text-xs text-slate-400">Uploaded {lastUpdated}</p>
       )}
     </Link>
   );

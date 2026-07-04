@@ -10,13 +10,14 @@ import { getPillarData } from "@/lib/dashboard-data";
 import type { JobPlacementRow } from "@/lib/validators/job-placement";
 
 export default async function PlacementDashboardPage() {
-  const { rows, hasDatabase, usingSampleData } = await getPillarData<JobPlacementRow>("job_placement");
+  const { rows, hasDatabase, usingSampleData, lastUploadLabel } = await getPillarData<JobPlacementRow>("job_placement");
 
   return (
     <>
       <PageHeader
         title="Job Placement & Settlement"
         description="Monthly placement funnel, testimonials, and incentive tracking"
+        lastUploadLabel={!usingSampleData ? lastUploadLabel : null}
       />
       {!hasDatabase && (
         <p className="mb-4 text-sm font-medium text-amber-700">Database not configured.</p>

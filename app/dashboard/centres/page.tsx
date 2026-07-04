@@ -10,13 +10,14 @@ import { getPillarData } from "@/lib/dashboard-data";
 import type { StudyCentresRow } from "@/lib/validators/study-centres";
 
 export default async function CentresDashboardPage() {
-  const { rows, hasDatabase, usingSampleData } = await getPillarData<StudyCentresRow>("study_centres");
+  const { rows, hasDatabase, usingSampleData, lastUploadLabel } = await getPillarData<StudyCentresRow>("study_centres");
 
   return (
     <>
       <PageHeader
         title="Offshore Study Centres"
         description="Fiji, Port Moresby, and Lae — branch comparison and Australia pipeline"
+        lastUploadLabel={!usingSampleData ? lastUploadLabel : null}
       />
       {!hasDatabase && (
         <p className="mb-4 text-sm font-medium text-amber-700">Database not configured.</p>

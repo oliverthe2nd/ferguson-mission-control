@@ -31,6 +31,24 @@ export function formatOptionalDate(
   return formatDate(date);
 }
 
+export function formatDateTime(value: Date | string): string {
+  const date = typeof value === "string" ? new Date(value) : value;
+  return date.toLocaleString("en-AU", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+export function formatLastUpload(
+  upload: { created_at: Date; file_name: string } | null | undefined,
+): string | null {
+  if (!upload) return null;
+  return `${formatDateTime(upload.created_at)} · ${upload.file_name}`;
+}
+
 export function formatShortDate(value: Date | string): string {
   const date = typeof value === "string" ? new Date(value) : value;
   return date.toLocaleDateString("en-AU", { day: "numeric", month: "short" });

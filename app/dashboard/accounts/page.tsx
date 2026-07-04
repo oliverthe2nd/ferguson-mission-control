@@ -12,13 +12,14 @@ import { formatAud } from "@/lib/format";
 import type { AccountsReceivableRow } from "@/lib/validators/accounts-receivable";
 
 export default async function AccountsDashboardPage() {
-  const { rows, hasDatabase, usingSampleData } = await getPillarData<AccountsReceivableRow>("accounts_receivable");
+  const { rows, hasDatabase, usingSampleData, lastUploadLabel } = await getPillarData<AccountsReceivableRow>("accounts_receivable");
 
   return (
     <>
       <PageHeader
         title="Accounts"
         description="School commission receivables — delinquency tracking and follow-ups"
+        lastUploadLabel={!usingSampleData ? lastUploadLabel : null}
       />
       {!hasDatabase && (
         <p className="mb-4 text-sm font-medium text-amber-700">Database not configured.</p>

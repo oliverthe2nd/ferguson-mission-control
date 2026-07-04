@@ -11,7 +11,7 @@ import { getPillarData } from "@/lib/dashboard-data";
 import type { VisaLodgementRow } from "@/lib/validators/visa-lodgement";
 
 export default async function VisaDashboardPage() {
-  const { rows, hasDatabase, usingSampleData } =
+  const { rows, hasDatabase, usingSampleData, lastUploadLabel } =
     await getPillarData<VisaLodgementRow>("visa_lodgement");
   const alerts = getVisaAlerts(rows);
 
@@ -20,6 +20,7 @@ export default async function VisaDashboardPage() {
       <PageHeader
         title="Visa Team"
         description="Lodgement pipeline — subclass breakdown and turnaround tracking"
+        lastUploadLabel={!usingSampleData ? lastUploadLabel : null}
       />
       {!hasDatabase && !usingSampleData && (
         <p className="mb-4 text-sm font-medium text-amber-700">Database not configured.</p>

@@ -24,6 +24,11 @@ export async function getAllSnapshots(reportType: ReportType) {
 
 /** Rows from the most recent upload only — avoids stacking duplicate uploads in dashboards. */
 export async function getSnapshotsFromLatestUpload(reportType: ReportType) {
+  const { snapshots } = await getLatestUploadSnapshots(reportType);
+  return snapshots;
+}
+
+export async function getLatestUploadSnapshots(reportType: ReportType) {
   const database = requireDb();
   const [latestUpload] = await database
     .select()
@@ -32,13 +37,17 @@ export async function getSnapshotsFromLatestUpload(reportType: ReportType) {
     .orderBy(desc(uploads.created_at))
     .limit(1);
 
-  if (!latestUpload) return [];
+  if (!latestUpload) {
+    return { snapshots: [], upload: null };
+  }
 
-  return database
+  const snapshots = await database
     .select()
     .from(reportSnapshots)
     .where(eq(reportSnapshots.upload_id, latestUpload.id))
     .orderBy(desc(reportSnapshots.period_date));
+
+  return { snapshots, upload: latestUpload };
 }
 
 export async function getUploadHistory(limit = 50) {
@@ -54,8 +63,8 @@ export async function getLastUpdatedByPillar() {
   const database = requireDb();
   const all = await database
     .select()
-    .from(reportSnapshots)
-    .orderBy(desc(reportSnapshots.created_at));
+    .from(uploads)
+    .orderBy(desc(uploads.created_at));
 
   const map = new Map<string, Date>();
   for (const row of all) {

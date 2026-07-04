@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAdmin, getAuthUserId } from "@/lib/auth";
 import { REPORT_TYPES, type ReportType } from "@/lib/constants";
+import { revalidateDashboardData } from "@/lib/cached-queries";
 import { requireDb } from "@/lib/db";
 import { getPeriodDate, ParseError, validateReportData } from "@/lib/parse";
 import { reportSnapshots, uploads } from "@/lib/schema";
@@ -49,6 +50,8 @@ export async function POST(request: Request) {
     }));
 
     await database.insert(reportSnapshots).values(snapshotValues);
+
+    revalidateDashboardData(body.reportType);
 
     return NextResponse.json({
       success: true,

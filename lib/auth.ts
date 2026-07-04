@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { isClerkConfigured } from "./clerk-config";
 import { DEMO_USER } from "./demo-user";
 
@@ -14,7 +15,7 @@ export function isDemoMode(): boolean {
   return !isClerkConfigured();
 }
 
-export async function getSessionUser(): Promise<SessionUser | null> {
+export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
   if (isDemoMode()) {
     return DEMO_USER;
   }
@@ -35,7 +36,7 @@ export async function getSessionUser(): Promise<SessionUser | null> {
     email: user.emailAddresses[0]?.emailAddress ?? "",
     role,
   };
-}
+});
 
 export async function requireAdmin(): Promise<SessionUser | null> {
   const user = await getSessionUser();

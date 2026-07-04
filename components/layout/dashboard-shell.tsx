@@ -1,4 +1,5 @@
 import { Sidebar, TopBar } from "./app-shell";
+import { NavigationProgress } from "./navigation-progress";
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   return (
@@ -9,6 +10,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
       <Sidebar />
       <div className="relative flex min-w-0 flex-1 flex-col">
+        <NavigationProgress />
         <TopBar />
         <main className="relative flex-1 space-y-8 px-5 py-8 sm:px-8">
           {children}

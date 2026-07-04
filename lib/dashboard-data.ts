@@ -4,11 +4,11 @@ import { KPI, PILLAR_ROUTES, REPORT_TYPE_LABELS } from "./constants";
 import { normalizeEnrolmentRows } from "./enrolment-dates";
 import { formatAud, formatDateTime, formatLastUpload, formatPct, excludeFuturePeriodRows } from "./format";
 import {
-  flattenSnapshotRows,
-  getLastUpdatedByPillar,
-  getLatestSnapshots,
-  getLatestUploadSnapshots,
-} from "./queries";
+  getCachedLastUpdatedByPillar,
+  getCachedLatestSnapshots,
+  getCachedLatestUploadSnapshots,
+} from "./cached-queries";
+import { flattenSnapshotRows } from "./queries";
 import { getAllSampleData, getSampleRows } from "./sample-rows";
 import type { AccountsReceivableRow } from "./validators/accounts-receivable";
 import type { EnrolmentMilestoneRow } from "./validators/enrolment-milestones";
@@ -165,13 +165,13 @@ export async function getDashboardOverview() {
       centresSnapshots,
       lastUpdated,
     ] = await Promise.all([
-      getLatestSnapshots("sales_pipeline", 8),
-      getLatestUploadSnapshots("enrolment_milestones"),
-      getLatestSnapshots("visa_lodgement", 8),
-      getLatestSnapshots("accounts_receivable", 1),
-      getLatestSnapshots("job_placement", 8),
-      getLatestSnapshots("study_centres", 8),
-      getLastUpdatedByPillar(),
+      getCachedLatestSnapshots("sales_pipeline", 8),
+      getCachedLatestUploadSnapshots("enrolment_milestones"),
+      getCachedLatestSnapshots("visa_lodgement", 8),
+      getCachedLatestSnapshots("accounts_receivable", 1),
+      getCachedLatestSnapshots("job_placement", 8),
+      getCachedLatestSnapshots("study_centres", 8),
+      getCachedLastUpdatedByPillar(),
     ]);
 
     const sales = flattenSnapshotRows<SalesPipelineRow>(salesSnapshots);
@@ -255,7 +255,7 @@ export async function getPillarData<T>(reportType: ReportType) {
   }
 
   try {
-    const { snapshots, upload } = await getLatestUploadSnapshots(reportType);
+    const { snapshots, upload } = await getCachedLatestUploadSnapshots(reportType);
     let rows = flattenSnapshotRows<T>(snapshots);
     if (reportType === "enrolment_milestones" && rows.length > 0) {
       rows = normalizeEnrolmentRows(rows as EnrolmentMilestoneRow[]) as T[];

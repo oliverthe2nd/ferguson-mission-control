@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
 import {
@@ -34,6 +34,24 @@ const NAV_ITEMS: {
   { href: "/preview", label: "Chart Preview", icon: LayoutDashboard },
 ];
 
+function NavItemLabel({ label }: { label: string }) {
+  const { pending } = useLinkStatus();
+
+  return (
+    <span
+      className={cn(
+        "transition-opacity duration-200",
+        pending && "opacity-60",
+      )}
+    >
+      {label}
+      {pending ? (
+        <span className="ml-2 inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500 align-middle" />
+      ) : null}
+    </span>
+  );
+}
+
 export function SidebarNav({ isAdmin }: { isAdmin: boolean }) {
   const pathname = usePathname();
 
@@ -49,6 +67,7 @@ export function SidebarNav({ isAdmin }: { isAdmin: boolean }) {
           <Link
             key={item.href}
             href={item.href}
+            prefetch
             className={cn(
               "flex items-center gap-3 rounded-2xl px-4 py-3 text-[15px] font-bold transition backdrop-blur-xl",
               active
@@ -56,8 +75,8 @@ export function SidebarNav({ isAdmin }: { isAdmin: boolean }) {
                 : "text-slate-600 hover:bg-white/45 hover:text-slate-950 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]",
             )}
           >
-            <Icon className="h-4 w-4" />
-            {item.label}
+            <Icon className="h-4 w-4 shrink-0" />
+            <NavItemLabel label={item.label} />
           </Link>
         );
       })}

@@ -45,13 +45,31 @@ export function stackBarRadius(
   payload: Record<string, unknown>,
   seriesKeys: readonly string[],
 ): [number, number, number, number] {
-  const active = seriesKeys.filter((key) => Number(payload[key] ?? 0) > 0);
-  if (active.length === 0) return [0, 0, 0, 0];
+  const values = seriesKeys.map((key) => ({
+    key,
+    value: Number(payload[key] ?? 0),
+  }));
+  const total = values.reduce((sum, item) => sum + item.value, 0);
+  if (total <= 0) return [0, 0, 0, 0];
+
+  // Ignore tiny slices (e.g. 1 website lead) so they don't flip bar rounding.
+  const minShare = 0.02;
+  const active = values
+    .filter((item) => item.value > 0 && item.value / total >= minShare)
+    .map((item) => item.key);
+
+  if (active.length === 0) {
+    const largest = values.reduce((best, item) =>
+      item.value > best.value ? item : best,
+    );
+    if (largest.value <= 0) return [0, 0, 0, 0];
+    return largest.key === seriesKey ? BAR_RADIUS : [0, 0, 0, 0];
+  }
 
   const bottom = active[0]!;
   const top = active[active.length - 1]!;
 
-  if (bottom === top) return BAR_RADIUS;
+  if (bottom === top) return seriesKey === bottom ? BAR_RADIUS : [0, 0, 0, 0];
   if (seriesKey === bottom) return BAR_RADIUS_STACK_BOTTOM;
   if (seriesKey === top) return BAR_RADIUS_STACK_TOP;
   return [0, 0, 0, 0];

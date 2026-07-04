@@ -52,7 +52,13 @@ function NavItemLabel({ label }: { label: string }) {
   );
 }
 
-export function SidebarNav({ isAdmin }: { isAdmin: boolean }) {
+export function SidebarNav({
+  isAdmin,
+  onNavigate,
+}: {
+  isAdmin: boolean;
+  onNavigate?: () => void;
+}) {
   const pathname = usePathname();
 
   return (
@@ -68,6 +74,7 @@ export function SidebarNav({ isAdmin }: { isAdmin: boolean }) {
             key={item.href}
             href={item.href}
             prefetch
+            onClick={onNavigate}
             className={cn(
               "flex items-center gap-3 rounded-2xl px-4 py-3 text-[15px] font-bold transition backdrop-blur-xl",
               active

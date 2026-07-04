@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { getSessionUser, isDemoMode } from "@/lib/auth";
+import { MobileNav } from "./mobile-nav";
 import { SidebarNav } from "./sidebar-nav";
 import { UserMenu } from "./user-menu";
 
@@ -33,28 +34,32 @@ export async function Sidebar() {
 export async function TopBar() {
   const user = await getSessionUser();
   const demoMode = isDemoMode();
+  const isAdmin = user?.role === "admin";
 
   return (
     <header className="sticky top-0 z-20 border-b border-white/70 bg-white/55 shadow-[0_12px_40px_rgba(31,42,61,0.05)] backdrop-blur-2xl">
-      <div className="flex min-h-20 flex-col justify-center gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-8">
-        <div className="lg:hidden">
-          <Image
-            src="/ferguson-logo.png"
-            alt="Ferguson"
-            width={40}
-            height={40}
-            className="h-8 w-auto object-contain"
-          />
+      <div className="flex min-h-20 items-center justify-between gap-3 px-5 py-4 sm:px-8">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="flex items-center gap-3 lg:hidden">
+            <MobileNav isAdmin={isAdmin} />
+            <Image
+              src="/ferguson-logo.png"
+              alt="Ferguson"
+              width={40}
+              height={40}
+              className="h-8 w-auto object-contain"
+            />
+          </div>
+          <div className="hidden lg:block">
+            <p className="text-sm font-bold uppercase tracking-[0.18em] text-emerald-600">
+              Ferguson Insight
+            </p>
+            <h1 className="mt-1 text-lg font-black tracking-tight text-slate-900 sm:text-xl">
+              Education & Migration — Single Source of Truth
+            </h1>
+          </div>
         </div>
-        <div className="hidden lg:block">
-          <p className="text-sm font-bold uppercase tracking-[0.18em] text-emerald-600">
-            Ferguson Insight
-          </p>
-          <h1 className="mt-1 text-lg font-black tracking-tight text-slate-900 sm:text-xl">
-            Education & Migration — Single Source of Truth
-          </h1>
-        </div>
-        <div className="flex items-center gap-3">
+        <div className="flex shrink-0 items-center gap-3">
           {user && (
             <>
               <span className="hidden text-sm font-bold text-slate-600 sm:inline">

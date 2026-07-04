@@ -9,6 +9,7 @@ import {
 } from "@/lib/report-columns";
 import { editorToRows, rowsToEditor } from "@/lib/row-format";
 import { Button } from "@/components/ui/button";
+import { EdgeScrollContainer } from "@/components/ui/edge-scroll-container";
 
 type SpreadsheetEditorProps = {
   reportType: EditableReportType;
@@ -127,9 +128,9 @@ export function SpreadsheetEditor({
         </div>
       )}
 
-      <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
+      <EdgeScrollContainer className="max-h-[min(70vh,42rem)] rounded-lg border border-slate-200 bg-white">
         <table className="min-w-full text-left text-sm">
-          <thead className="border-b border-slate-200 bg-slate-50">
+          <thead className="sticky top-0 z-[1] border-b border-slate-200 bg-slate-50">
             <tr>
               {columns.map((col) => (
                 <th key={col.key} className="whitespace-nowrap px-2 py-2 font-medium text-slate-600">
@@ -166,7 +167,7 @@ export function SpreadsheetEditor({
             ))}
           </tbody>
         </table>
-      </div>
+      </EdgeScrollContainer>
 
       <div className="flex flex-wrap items-center gap-3">
         <Button variant="secondary" onClick={addRow} disabled={isLocked}>

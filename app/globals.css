@@ -1,26 +1,93 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f2f8f6;
+  --foreground: #1f2a3d;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --color-emerald: #20c997;
+  --color-f-green: #2bae4a;
+  --color-f-orange: #e45a2a;
+  --color-f-amber: #f6a20b;
+  --color-dark: #1f2a3d;
+  --color-mint: #e6faf0;
+  --color-footer: #1e1e1e;
+  --font-sans: var(--font-inter);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+body {
+  color: var(--foreground);
+  font-family: var(--font-inter), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background:
+    radial-gradient(circle at 12% 10%, rgba(32, 201, 151, 0.14), transparent 30%),
+    radial-gradient(circle at 88% 22%, rgba(228, 90, 42, 0.12), transparent 28%),
+    radial-gradient(circle at 52% 100%, rgba(31, 42, 61, 0.1), transparent 34%),
+    #f2f8f6;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+::selection {
+  background: #a7f3d0;
+  color: #064e3b;
+}
+
+@layer components {
+  .liquid-glass {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .liquid-glass::before {
+    content: "";
+    position: absolute;
+    inset: 1px;
+    z-index: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    background:
+      linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.86),
+        rgba(255, 255, 255, 0.18) 42%,
+        rgba(255, 255, 255, 0.48)
+      ),
+      radial-gradient(circle at 18% 0%, rgba(255, 255, 255, 0.82), transparent 28%);
+    opacity: 0.72;
+    mix-blend-mode: screen;
+  }
+
+  .liquid-glass::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    background: linear-gradient(
+      115deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.18) 34%,
+      rgba(255, 255, 255, 0.58) 45%,
+      rgba(255, 255, 255, 0.12) 56%,
+      transparent 74%
+    );
+    transform: translateX(-38%) skewX(-12deg);
+    transition: transform 700ms ease, opacity 300ms ease;
+    opacity: 0.45;
+  }
+
+  .liquid-glass:hover::after {
+    transform: translateX(28%) skewX(-12deg);
+    opacity: 0.7;
+  }
+
+  .liquid-glass > * {
+    position: relative;
+    z-index: 1;
+  }
 }

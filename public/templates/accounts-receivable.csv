@@ -1,0 +1,7 @@
+school_name,invoice_ref,invoice_date,due_date,amount_aud,days_outstanding,last_contact_date,last_contact_note
+University of Sydney,INV-2026-0142,2026-03-15,2026-04-15,12500,78,2026-06-20,Second follow-up sent
+TAFE NSW,INV-2026-0156,2026-04-01,2026-05-01,8400,62,2026-06-15,Awaiting accounts response
+Griffith University,INV-2026-0168,2026-04-20,2026-05-20,15200,43,2026-06-28,Initial follow-up call made
+James Cook University,INV-2026-0175,2026-05-10,2026-06-10,6800,22,2026-06-25,Within terms
+CQUniversity,INV-2026-0181,2026-01-10,2026-02-10,22000,142,2026-05-01,Legal demand issued
+University of Melbourne,INV-2026-0189,2026-05-25,2026-06-25,9800,7,2026-06-30,Current

@@ -5,6 +5,7 @@ import {
   LeadSourceBarChart,
 } from "@/components/charts/sales-pipeline-charts";
 import { ChartCard } from "@/components/dashboard/chart-card";
+import { SampleDataBoundary } from "@/components/dashboard/sample-data-overlay";
 import { EmptyState } from "@/components/ui/empty-state";
 import { getPillarData } from "@/lib/dashboard-data";
 import type { SalesPipelineRow } from "@/lib/validators/sales-pipeline";
@@ -22,15 +23,17 @@ export default async function SalesDashboardPage() {
       {!hasDatabase && !usingSampleData && (
         <p className="mb-4 text-sm font-medium text-amber-700">Database not configured.</p>
       )}
-      {usingSampleData && (
-        <div className="liquid-glass mb-6 rounded-[1.25rem] border border-emerald-200/60 bg-white/55 px-4 py-3 text-sm text-dark shadow-[0_12px_40px_rgba(32,201,151,0.08)] backdrop-blur-xl">
-          Showing sample template data. Upload live reports at{" "}
-          <a href="/upload" className="font-bold text-emerald-700 underline">
-            /upload
-          </a>
-          .
-        </div>
-      )}
+      <SampleDataBoundary
+        active={usingSampleData}
+        hint={
+          <>
+            Upload live reports at{" "}
+            <a href="/upload" className="font-bold underline">
+              /upload
+            </a>
+          </>
+        }
+      >
       {rows.length === 0 ? (
         <EmptyState />
       ) : (
@@ -46,6 +49,7 @@ export default async function SalesDashboardPage() {
           </ChartCard>
         </div>
       )}
+      </SampleDataBoundary>
     </>
   );
 }

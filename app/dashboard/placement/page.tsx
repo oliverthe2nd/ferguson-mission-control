@@ -5,6 +5,7 @@ import {
   TestimonialBreakdownChart,
 } from "@/components/charts/placement-charts";
 import { ChartCard } from "@/components/dashboard/chart-card";
+import { SampleDataBoundary } from "@/components/dashboard/sample-data-overlay";
 import { EmptyState } from "@/components/ui/empty-state";
 import { getPillarData } from "@/lib/dashboard-data";
 import type { JobPlacementRow } from "@/lib/validators/job-placement";
@@ -19,9 +20,20 @@ export default async function PlacementDashboardPage() {
         description="Monthly placement funnel, testimonials, and incentive tracking"
         lastUploadLabel={!usingSampleData ? lastUploadLabel : null}
       />
-      {!hasDatabase && (
+      {!hasDatabase && !usingSampleData && (
         <p className="mb-4 text-sm font-medium text-amber-700">Database not configured.</p>
       )}
+      <SampleDataBoundary
+        active={usingSampleData}
+        hint={
+          <>
+            Upload live reports at{" "}
+            <a href="/upload" className="font-bold underline">
+              /upload
+            </a>
+          </>
+        }
+      >
       {rows.length === 0 ? (
         <EmptyState />
       ) : (
@@ -37,6 +49,7 @@ export default async function PlacementDashboardPage() {
           </ChartCard>
         </div>
       )}
+      </SampleDataBoundary>
     </>
   );
 }

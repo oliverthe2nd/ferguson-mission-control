@@ -5,6 +5,7 @@ import {
   SchoolOutstandingChart,
 } from "@/components/charts/accounts-charts";
 import { ChartCard } from "@/components/dashboard/chart-card";
+import { SampleDataBoundary } from "@/components/dashboard/sample-data-overlay";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { getArStatus, getPillarData } from "@/lib/dashboard-data";
@@ -21,9 +22,20 @@ export default async function AccountsDashboardPage() {
         description="School commission receivables — delinquency tracking and follow-ups"
         lastUploadLabel={!usingSampleData ? lastUploadLabel : null}
       />
-      {!hasDatabase && (
+      {!hasDatabase && !usingSampleData && (
         <p className="mb-4 text-sm font-medium text-amber-700">Database not configured.</p>
       )}
+      <SampleDataBoundary
+        active={usingSampleData}
+        hint={
+          <>
+            Upload live reports at{" "}
+            <a href="/upload" className="font-bold underline">
+              /upload
+            </a>
+          </>
+        }
+      >
       {rows.length === 0 ? (
         <EmptyState />
       ) : (
@@ -73,6 +85,7 @@ export default async function AccountsDashboardPage() {
           </ChartCard>
         </>
       )}
+      </SampleDataBoundary>
     </>
   );
 }

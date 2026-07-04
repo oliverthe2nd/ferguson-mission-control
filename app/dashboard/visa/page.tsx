@@ -5,6 +5,7 @@ import {
   SubclassBreakdownChart,
 } from "@/components/charts/visa-charts";
 import { ChartCard } from "@/components/dashboard/chart-card";
+import { SampleDataBoundary } from "@/components/dashboard/sample-data-overlay";
 import { EmptyState } from "@/components/ui/empty-state";
 import { getVisaAlerts } from "@/lib/alerts";
 import { getPillarData } from "@/lib/dashboard-data";
@@ -25,13 +26,17 @@ export default async function VisaDashboardPage() {
       {!hasDatabase && !usingSampleData && (
         <p className="mb-4 text-sm font-medium text-amber-700">Database not configured.</p>
       )}
-      {usingSampleData && (
-        <div className="liquid-glass mb-6 rounded-[1.25rem] border border-emerald-200/60 bg-white/55 px-4 py-3 text-sm text-dark shadow-[0_12px_40px_rgba(32,201,151,0.08)] backdrop-blur-xl">
-          Showing uploaded sample data (103 rows from{" "}
-          <code className="font-mono text-xs">visa-lodgement-generated.csv</code>
-          ). Connect a database and upload via /upload to persist live data.
-        </div>
-      )}
+      <SampleDataBoundary
+        active={usingSampleData}
+        hint={
+          <>
+            Upload live reports at{" "}
+            <a href="/upload" className="font-bold underline">
+              /upload
+            </a>
+          </>
+        }
+      >
       {alerts.hasRefusals && (
         <div className="liquid-glass mb-6 rounded-[1.25rem] border border-orange-200/70 bg-orange-50/80 p-4 text-sm font-bold text-f-orange shadow-[0_12px_40px_rgba(228,90,42,0.08)] backdrop-blur-xl">
           Requires immediate management review — visa refusals detected in latest data.
@@ -61,6 +66,7 @@ export default async function VisaDashboardPage() {
           </ChartCard>
         </div>
       )}
+      </SampleDataBoundary>
     </>
   );
 }

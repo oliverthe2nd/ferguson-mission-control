@@ -5,6 +5,7 @@ import {
   BranchComparisonChart,
 } from "@/components/charts/centres-charts";
 import { ChartCard } from "@/components/dashboard/chart-card";
+import { SampleDataBoundary } from "@/components/dashboard/sample-data-overlay";
 import { EmptyState } from "@/components/ui/empty-state";
 import { getPillarData } from "@/lib/dashboard-data";
 import type { StudyCentresRow } from "@/lib/validators/study-centres";
@@ -19,9 +20,20 @@ export default async function CentresDashboardPage() {
         description="Fiji, Port Moresby, and Lae — branch comparison and Australia pipeline"
         lastUploadLabel={!usingSampleData ? lastUploadLabel : null}
       />
-      {!hasDatabase && (
+      {!hasDatabase && !usingSampleData && (
         <p className="mb-4 text-sm font-medium text-amber-700">Database not configured.</p>
       )}
+      <SampleDataBoundary
+        active={usingSampleData}
+        hint={
+          <>
+            Upload live reports at{" "}
+            <a href="/upload" className="font-bold underline">
+              /upload
+            </a>
+          </>
+        }
+      >
       {rows.length === 0 ? (
         <EmptyState />
       ) : (
@@ -37,6 +49,7 @@ export default async function CentresDashboardPage() {
           </ChartCard>
         </div>
       )}
+      </SampleDataBoundary>
     </>
   );
 }

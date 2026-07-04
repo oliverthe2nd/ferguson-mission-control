@@ -91,3 +91,29 @@ export function monthOnlyLabelFromKey(key: string): string {
   const date = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, 1));
   return date.toLocaleDateString("en-AU", { month: "short", timeZone: "UTC" });
 }
+
+const REPORT_TIMEZONE = "Australia/Sydney";
+
+function toReportCalendarDay(value: Date | string): string | null {
+  const date = value instanceof Date ? value : new Date(String(value));
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toLocaleDateString("en-CA", { timeZone: REPORT_TIMEZONE });
+}
+
+/** True when a report period date is after today in the org timezone. */
+export function isFuturePeriod(
+  period: Date | string,
+  asOf: Date = new Date(),
+): boolean {
+  const periodDay = toReportCalendarDay(period);
+  const todayDay = toReportCalendarDay(asOf);
+  if (!periodDay || !todayDay) return false;
+  return periodDay > todayDay;
+}
+
+export function excludeFuturePeriodRows<T extends { period: Date | string }>(
+  rows: T[],
+  asOf: Date = new Date(),
+): T[] {
+  return rows.filter((row) => !isFuturePeriod(row.period, asOf));
+}

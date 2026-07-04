@@ -2,7 +2,7 @@ import { buildAlertTray, getArStatus, getSalesRag, getVisaAlerts, isStudentAtRis
 import type { ReportType } from "./constants";
 import { KPI, PILLAR_ROUTES, REPORT_TYPE_LABELS } from "./constants";
 import { normalizeEnrolmentRows } from "./enrolment-dates";
-import { formatAud, formatDateTime, formatLastUpload, formatPct } from "./format";
+import { formatAud, formatDateTime, formatLastUpload, formatPct, excludeFuturePeriodRows } from "./format";
 import {
   flattenSnapshotRows,
   getLastUpdatedByPillar,
@@ -179,7 +179,9 @@ export async function getDashboardOverview() {
     const enrolment = normalizeEnrolmentRows(
       flattenSnapshotRows<EnrolmentMilestoneRow>(enrolmentSnapshots),
     );
-    const visa = flattenSnapshotRows<VisaLodgementRow>(visaSnapshots);
+    const visa = excludeFuturePeriodRows(
+      flattenSnapshotRows<VisaLodgementRow>(visaSnapshots),
+    );
     const accounts = flattenSnapshotRows<AccountsReceivableRow>(accountsSnapshots);
     const placement = flattenSnapshotRows<JobPlacementRow>(placementSnapshots);
     const centres = flattenSnapshotRows<StudyCentresRow>(centresSnapshots);
@@ -257,6 +259,9 @@ export async function getPillarData<T>(reportType: ReportType) {
     let rows = flattenSnapshotRows<T>(snapshots);
     if (reportType === "enrolment_milestones" && rows.length > 0) {
       rows = normalizeEnrolmentRows(rows as EnrolmentMilestoneRow[]) as T[];
+    }
+    if (reportType === "visa_lodgement" && rows.length > 0) {
+      rows = excludeFuturePeriodRows(rows as VisaLodgementRow[]) as T[];
     }
     const lastUploadLabel = formatLastUpload(upload);
     if (rows.length > 0) {

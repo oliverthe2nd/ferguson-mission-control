@@ -4,9 +4,9 @@ import { KPI, PILLAR_ROUTES, REPORT_TYPE_LABELS } from "./constants";
 import { formatAud, formatDate, formatPct } from "./format";
 import {
   flattenSnapshotRows,
-  getAllSnapshots,
   getLastUpdatedByPillar,
   getLatestSnapshots,
+  getSnapshotsFromLatestUpload,
 } from "./queries";
 import { getAllSampleData, getSampleRows } from "./sample-rows";
 import type { AccountsReceivableRow } from "./validators/accounts-receivable";
@@ -164,7 +164,7 @@ export async function getDashboardOverview() {
       lastUpdated,
     ] = await Promise.all([
       getLatestSnapshots("sales_pipeline", 8),
-      getLatestSnapshots("enrolment_milestones", 1),
+      getSnapshotsFromLatestUpload("enrolment_milestones"),
       getLatestSnapshots("visa_lodgement", 8),
       getLatestSnapshots("accounts_receivable", 1),
       getLatestSnapshots("job_placement", 8),
@@ -244,7 +244,7 @@ export async function getPillarData<T>(reportType: ReportType) {
   }
 
   try {
-    const snapshots = await getAllSnapshots(reportType);
+    const snapshots = await getSnapshotsFromLatestUpload(reportType);
     const rows = flattenSnapshotRows<T>(snapshots);
     if (rows.length > 0) {
       return { rows, hasDatabase: true, usingSampleData: false };

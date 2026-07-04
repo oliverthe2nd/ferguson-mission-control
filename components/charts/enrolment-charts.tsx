@@ -123,17 +123,19 @@ function AvgDaysPerStageChartInner({
       ? chartData.reduce((sum, row) => sum + row.avgDays, 0) / chartData.length
       : 0;
   const barMax = Math.max(...chartData.map((row) => row.avgDays), 0);
-  const xMax = barMax === 0 ? 10 : Math.ceil(barMax * 1.14);
+  const xMax = barMax === 0 ? 10 : Math.ceil(barMax * 1.08);
 
-  const formatDays = (value: number) =>
-    Number.isInteger(value) ? String(value) : value.toFixed(1);
+  const formatDays = (value: number) => {
+    const n = Number.isInteger(value) ? value : Number(value.toFixed(1));
+    return n.toLocaleString("en-AU", { maximumFractionDigits: 1 });
+  };
 
   return (
     <ChartFrame>
       <BarChart
         data={chartData}
         layout="vertical"
-        margin={{ ...CHART_MARGIN, left: 8, right: 12, bottom: 22 }}
+        margin={{ ...CHART_MARGIN, left: 8, right: 4, bottom: 28 }}
         barCategoryGap="22%"
       >
         <ChartGrid vertical />
@@ -141,13 +143,14 @@ function AvgDaysPerStageChartInner({
           type="number"
           allowDecimals={false}
           domain={[0, xMax]}
+          tickFormatter={(v) => formatDays(v)}
           label={{
             value: "Days",
-            position: "insideBottom",
-            offset: -4,
+            position: "bottom",
+            offset: 0,
             style: {
               fill: CHART_COLORS.muted,
-              fontSize: 12,
+              fontSize: 11,
               fontWeight: 600,
             },
           }}
@@ -165,10 +168,10 @@ function AvgDaysPerStageChartInner({
           strokeDasharray="6 4"
           strokeWidth={2}
           label={{
-            value: "Avg",
-            position: "insideTopRight",
+            value: `Avg ${formatDays(overallAvg)}`,
+            position: "insideTopLeft",
             fill: CHART_COLORS.muted,
-            fontSize: 11,
+            fontSize: 10,
             fontWeight: 700,
           }}
         />
@@ -180,10 +183,15 @@ function AvgDaysPerStageChartInner({
         >
           <LabelList
             dataKey="avgDays"
-            position="right"
-            offset={6}
+            position="insideRight"
+            offset={-10}
             formatter={(value) => formatDays(Number(value))}
-            style={{ fill: CHART_COLORS.dark, fontSize: 11, fontWeight: 700 }}
+            style={{
+              fill: "#fff",
+              fontSize: 11,
+              fontWeight: 700,
+              textShadow: "0 1px 2px rgba(31,42,61,0.35)",
+            }}
           />
         </Bar>
       </BarChart>

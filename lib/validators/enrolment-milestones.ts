@@ -1,8 +1,18 @@
 import { z } from "zod";
 
-const optionalDate = z
-  .union([z.coerce.date(), z.literal(""), z.null(), z.undefined()])
-  .transform((v) => (v === "" || v === null || v === undefined ? null : v));
+/** Empty CSV cells must stay null — z.coerce.date() alone turns null into epoch (1970-01-01). */
+const optionalDate = z.preprocess(
+  (value) => {
+    if (value === "" || value === null || value === undefined) return null;
+    return value;
+  },
+  z.union([
+    z.null(),
+    z.coerce.date().refine((date) => !Number.isNaN(date.getTime()), {
+      message: "Invalid date",
+    }),
+  ]),
+);
 
 export const enrolmentMilestoneRowSchema = z.object({
   student_id: z.coerce.string(),

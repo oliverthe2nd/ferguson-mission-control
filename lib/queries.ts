@@ -22,6 +22,25 @@ export async function getAllSnapshots(reportType: ReportType) {
     .orderBy(desc(reportSnapshots.period_date));
 }
 
+/** Rows from the most recent upload only — avoids stacking duplicate uploads in dashboards. */
+export async function getSnapshotsFromLatestUpload(reportType: ReportType) {
+  const database = requireDb();
+  const [latestUpload] = await database
+    .select()
+    .from(uploads)
+    .where(eq(uploads.report_type, reportType))
+    .orderBy(desc(uploads.created_at))
+    .limit(1);
+
+  if (!latestUpload) return [];
+
+  return database
+    .select()
+    .from(reportSnapshots)
+    .where(eq(reportSnapshots.upload_id, latestUpload.id))
+    .orderBy(desc(reportSnapshots.period_date));
+}
+
 export async function getUploadHistory(limit = 50) {
   const database = requireDb();
   return database

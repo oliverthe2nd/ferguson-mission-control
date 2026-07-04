@@ -19,6 +19,7 @@ import {
   ChartTooltip,
   ChartXAxis,
   ChartYAxis,
+  AXIS_TICK,
   LINE_PROPS,
   SERIES_COLORS,
 } from "./chart-theme";
@@ -154,6 +155,9 @@ function LodgementTrendChartInner({
   }, [data, selectedYear]);
 
   const chartData = useMemo(() => aggregateLodgedByMonth(filteredRows), [filteredRows]);
+  const denseAxis = chartData.length > 12;
+  const xAxisHeight = denseAxis ? 56 : 36;
+  const chartBottomMargin = denseAxis ? 52 : 24;
 
   if (loading) return <ChartSkeleton />;
   if (data.length === 0) return <EmptyState />;
@@ -171,39 +175,45 @@ function LodgementTrendChartInner({
   }
 
   return (
-    <>
+    <div className="flex h-full min-h-0 flex-col">
       <YearFilter
         years={availableYears}
         selectedYear={selectedYear}
         onChange={setSelectedYear}
       />
-      <ChartFrame>
-        <AreaChart data={chartData} margin={{ ...CHART_MARGIN, bottom: 8 }}>
-          <AreaGradient id="visaLodged" color={CHART_COLORS.primary} />
-          <ChartGrid />
-          <ChartXAxis
-            dataKey="period"
-            interval={selectedYear === "all" ? "preserveStartEnd" : 0}
-            minTickGap={selectedYear === "all" ? 28 : 8}
-            angle={selectedYear === "all" ? 0 : -35}
-            textAnchor={selectedYear === "all" ? "middle" : "end"}
-            height={selectedYear === "all" ? 30 : 50}
-          />
-          <ChartYAxis allowDecimals={false} />
-          <ChartTooltip />
-          <Area
-            type="monotone"
-            dataKey="lodged"
-            name="Lodged"
-            stroke={CHART_COLORS.primary}
-            strokeWidth={4}
-            fill="url(#visaLodged)"
-            dot={{ ...LINE_PROPS.dot, fill: CHART_COLORS.primary }}
-            activeDot={LINE_PROPS.activeDot}
-          />
-        </AreaChart>
-      </ChartFrame>
-    </>
+      <div className="min-h-0 flex-1">
+        <ChartFrame>
+          <AreaChart
+            data={chartData}
+            margin={{ ...CHART_MARGIN, left: 0, bottom: chartBottomMargin }}
+          >
+            <AreaGradient id="visaLodged" color={CHART_COLORS.primary} />
+            <ChartGrid />
+            <ChartXAxis
+              dataKey="period"
+              interval={0}
+              minTickGap={0}
+              angle={denseAxis ? -40 : 0}
+              textAnchor={denseAxis ? "end" : "middle"}
+              height={xAxisHeight}
+              tick={{ ...AXIS_TICK, fontSize: denseAxis ? 11 : 12 }}
+            />
+            <ChartYAxis allowDecimals={false} width={36} />
+            <ChartTooltip />
+            <Area
+              type="monotone"
+              dataKey="lodged"
+              name="Lodged"
+              stroke={CHART_COLORS.primary}
+              strokeWidth={4}
+              fill="url(#visaLodged)"
+              dot={{ ...LINE_PROPS.dot, fill: CHART_COLORS.primary }}
+              activeDot={LINE_PROPS.activeDot}
+            />
+          </AreaChart>
+        </ChartFrame>
+      </div>
+    </div>
   );
 }
 

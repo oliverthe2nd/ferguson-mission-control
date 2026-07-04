@@ -77,6 +77,11 @@ export default async function AdminPage() {
             <p className="mb-4 text-sm text-slate-600">
               Pull the last 12 weeks of leads and deal stage history into Sales
               &amp; Marketing. This creates a new upload snapshot in Neon.
+              Stage transition dates need{" "}
+              <code className="font-mono text-xs">
+                ZohoCRM.settings.related_lists.READ
+              </code>{" "}
+              in addition to leads/deals read scopes.
             </p>
             <ZohoSalesSyncButton />
           </>

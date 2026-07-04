@@ -3,7 +3,7 @@ import {
   fetchAllLeadsInRange,
   fetchDealStageHistory,
 } from "../lib/zoho/client";
-import { isZohoConfigured } from "../lib/zoho/config";
+import { isZohoConfigured, ZOHO_RECOMMENDED_SCOPES } from "../lib/zoho/config";
 import { formatZohoDateTime, zohoBetweenRange } from "../lib/zoho/weeks";
 
 async function check<T>(
@@ -63,31 +63,42 @@ async function main() {
       };
     }
   }
+
+  const stageIcon = stageHistory.ok ? "✓" : "⚠";
   console.log(
-    `${stageHistory.ok ? "✓" : "✗"} Deal Stage_History read — ${stageHistory.detail}`,
+    `${stageIcon} Deal Stage_History read — ${stageHistory.detail}`,
   );
 
-  const missing = [
-    !leads.ok && "ZohoCRM.modules.leads.READ",
-    !deals.ok && "ZohoCRM.modules.deals.READ",
-    !stageHistory.ok && "ZohoCRM.modules.deals.READ (related records / Stage_History)",
-  ].filter(Boolean);
-
-  if (missing.length > 0) {
+  if (!leads.ok || !deals.ok) {
     console.log(
-      "\nMissing OAuth scopes. Regenerate the refresh token at https://api-console.zoho.com.au with:",
+      "\nMissing required scopes. Regenerate at https://api-console.zoho.com.au with:",
     );
-    console.log(missing.map((scope) => `  - ${scope}`).join("\n"));
-    console.log(
-      "\nSuggested scope string:\n  ZohoCRM.modules.leads.READ,ZohoCRM.modules.deals.READ",
-    );
+    if (!leads.ok) console.log("  - ZohoCRM.modules.leads.READ");
+    if (!deals.ok) console.log("  - ZohoCRM.modules.deals.READ");
+    console.log(`\nMinimum scope string:\n  ${ZOHO_RECOMMENDED_SCOPES}`);
     process.exit(1);
   }
 
-  console.log("\nAll required Zoho permissions are available.");
+  if (!stageHistory.ok) {
+    console.log(
+      "\nStage_History is not its own scope — it uses Zoho's Related Records API.",
+    );
+    console.log(
+      "Add these settings scopes for accurate stage-transition dates:",
+    );
+    console.log("  - ZohoCRM.settings.fields.READ");
+    console.log("  - ZohoCRM.settings.related_lists.READ");
+    console.log(`\nFull recommended scope string:\n  ${ZOHO_RECOMMENDED_SCOPES}`);
+    console.log(
+      "\nSync can still run without Stage_History (lead counts + registrations use fallbacks).",
+    );
+    process.exit(0);
+  }
+
+  console.log("\nAll Zoho permissions are available.");
 }
 
 main().catch((error) => {
-  console.error(error instanceof Error ? error.message : error);
+  console.error(error instanceof Error ? error.message : String(error));
   process.exit(1);
 });

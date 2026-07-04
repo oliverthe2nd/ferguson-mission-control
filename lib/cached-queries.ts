@@ -51,8 +51,12 @@ export async function getCachedLastUpdatedByPillar(): Promise<Map<string, Date>>
 }
 
 export function revalidateDashboardData(reportType?: ReportType) {
-  revalidateTag("dashboard-data", "max");
-  if (reportType) {
-    revalidateTag(`pillar-${reportType}`, "max");
+  try {
+    revalidateTag("dashboard-data", "max");
+    if (reportType) {
+      revalidateTag(`pillar-${reportType}`, "max");
+    }
+  } catch {
+    // No-op outside Next.js request context (e.g. sync CLI script).
   }
 }

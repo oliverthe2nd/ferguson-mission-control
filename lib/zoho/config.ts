@@ -6,6 +6,10 @@ export const ZOHO_ACCOUNTS_DOMAIN =
 
 export const ZOHO_SYNC_WEEKS = Number(process.env.ZOHO_SYNC_WEEKS ?? "12");
 
+/** For full stage-transition dates via Stage_History related-list API. */
+export const ZOHO_RECOMMENDED_SCOPES =
+  "ZohoCRM.modules.leads.READ,ZohoCRM.modules.deals.READ,ZohoCRM.settings.fields.READ,ZohoCRM.settings.related_lists.READ";
+
 export function isZohoConfigured(): boolean {
   return Boolean(
     process.env.ZOHO_CLIENT_ID &&

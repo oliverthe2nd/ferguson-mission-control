@@ -7,6 +7,7 @@ import {
   fetchAllDealsInRange,
   fetchAllLeadsInRange,
   fetchDealStageHistory,
+  isZohoScopeError,
   mapWithConcurrency,
 } from "./client";
 import {
@@ -39,13 +40,32 @@ export async function syncSalesPipelineFromZoho(options?: {
   ]);
 
   const convertedDeals = filterConvertedDeals(deals);
+  let stageHistoryLimited = false;
+
+  if (convertedDeals.length > 0) {
+    try {
+      await fetchDealStageHistory(convertedDeals[0]!.id);
+    } catch (error) {
+      if (isZohoScopeError(error)) {
+        stageHistoryLimited = true;
+      } else {
+        throw error;
+      }
+    }
+  }
+
   const histories = await mapWithConcurrency(
     convertedDeals,
     4,
-    async (deal) => ({
-      deal,
-      history: await fetchDealStageHistory(deal.id),
-    }),
+    async (deal) => {
+      if (stageHistoryLimited) {
+        return { deal, history: [] };
+      }
+      return {
+        deal,
+        history: await fetchDealStageHistory(deal.id),
+      };
+    },
   );
 
   const rows = aggregateSalesPipelineRows({

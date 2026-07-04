@@ -1,14 +1,14 @@
 "use client";
 
-import { Bar, BarChart, Cell, LabelList, ReferenceLine } from "recharts";
+import { Bar, BarChart, Cell, Label, LabelList, Legend, Pie, PieChart, ReferenceLine } from "recharts";
 import { ChartErrorBoundary } from "@/components/ui/chart-error-boundary";
 import { ChartSkeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { isStudentAtRisk } from "@/lib/alerts";
+import { getMilestoneActual, getMilestoneTarget } from "@/lib/enrolment-dates";
 import { CHART_COLORS } from "@/lib/constants";
 import type { EnrolmentMilestoneRow } from "@/lib/validators/enrolment-milestones";
 import {
-  BAR_RADIUS,
   BAR_RADIUS_H,
   CHART_MARGIN,
   ChartFrame,
@@ -16,8 +16,40 @@ import {
   ChartTooltip,
   ChartXAxis,
   ChartYAxis,
-  SERIES_COLORS,
 } from "./chart-theme";
+
+function AtRiskCenterLabel({
+  viewBox,
+  total,
+}: {
+  viewBox?: { cx?: number; cy?: number } | null;
+  total: number;
+}) {
+  if (viewBox?.cx == null || viewBox?.cy == null) return null;
+
+  return (
+    <text x={viewBox.cx} y={viewBox.cy} textAnchor="middle" dominantBaseline="middle">
+      <tspan
+        x={viewBox.cx}
+        y={viewBox.cy - 6}
+        fill={CHART_COLORS.dark}
+        fontSize={28}
+        fontWeight={800}
+      >
+        {total}
+      </tspan>
+      <tspan
+        x={viewBox.cx}
+        y={viewBox.cy + 16}
+        fill={CHART_COLORS.muted}
+        fontSize={11}
+        fontWeight={600}
+      >
+        Enrolments
+      </tspan>
+    </text>
+  );
+}
 
 const MILESTONES = [
   { key: "m1", label: "M1 Consultation" },
@@ -37,21 +69,70 @@ function MilestoneFunnelChartInner({
   if (loading) return <ChartSkeleton />;
   if (data.length === 0) return <EmptyState />;
 
+  const totalStudents = data.length;
+
   const chartData = MILESTONES.map(({ key, label }) => {
-    const completed = data.filter(
-      (row) => row[`${key}_actual` as keyof EnrolmentMilestoneRow] !== null,
-    ).length;
-    return { stage: label, completed, total: data.length };
+    const completed = data.filter((row) => getMilestoneActual(row, key) !== null).length;
+    return {
+      stage: label,
+      completed,
+      remaining: totalStudents - completed,
+      total: totalStudents,
+    };
   });
 
   return (
     <ChartFrame>
-      <BarChart data={chartData} layout="vertical" margin={{ ...CHART_MARGIN, left: 8 }}>
+      <BarChart
+        data={chartData}
+        layout="vertical"
+        margin={{ ...CHART_MARGIN, left: 8, right: 8 }}
+        barCategoryGap="22%"
+      >
         <ChartGrid vertical />
-        <ChartXAxis type="number" allowDecimals={false} />
-        <ChartYAxis type="category" dataKey="stage" width={118} tick={{ fontSize: 11 }} />
-        <ChartTooltip />
-        <Bar dataKey="completed" name="Completed" fill={CHART_COLORS.primary} radius={BAR_RADIUS_H} />
+        <ChartXAxis
+          type="number"
+          allowDecimals={false}
+          domain={[0, totalStudents]}
+          tickFormatter={(value) => (value === totalStudents ? `${value}` : String(value))}
+        />
+        <ChartYAxis
+          type="category"
+          dataKey="stage"
+          width={118}
+          tick={{ fontSize: 11 }}
+        />
+        <ChartTooltip
+          valueFormatter={(value, name) => {
+            if (name === "Completed") {
+              const completed = Number(value);
+              const pct = totalStudents
+                ? Math.round((completed / totalStudents) * 100)
+                : 0;
+              return `${completed} of ${totalStudents} (${pct}%)`;
+            }
+            return String(value);
+          }}
+        />
+        <Bar dataKey="completed" name="Completed" stackId="cohort" fill={CHART_COLORS.primary}>
+          <LabelList
+            dataKey="completed"
+            position="insideLeft"
+            offset={8}
+            formatter={(value) => {
+              const completed = Number(value);
+              return completed > 0 ? `${completed}/${totalStudents}` : "";
+            }}
+            style={{ fill: "#fff", fontSize: 10, fontWeight: 700 }}
+          />
+        </Bar>
+        <Bar
+          dataKey="remaining"
+          name="Not completed"
+          stackId="cohort"
+          fill={CHART_COLORS.grid}
+          radius={BAR_RADIUS_H}
+        />
       </BarChart>
     </ChartFrame>
   );
@@ -68,25 +149,67 @@ function AtRiskTrendChartInner({
   if (data.length === 0) return <EmptyState />;
 
   const atRiskCount = data.filter((row) => isStudentAtRisk(row)).length;
+  const onTrackCount = data.length - atRiskCount;
   const chartData = [
-    { label: "Total Students", count: data.length, color: SERIES_COLORS[3] },
+    { label: "On Track", count: onTrackCount, color: CHART_COLORS.primary },
     { label: "AT RISK", count: atRiskCount, color: CHART_COLORS.alert },
-    { label: "On Track", count: data.length - atRiskCount, color: CHART_COLORS.primary },
-  ];
+  ].filter((entry) => entry.count > 0);
 
   return (
     <ChartFrame>
-      <BarChart data={chartData} margin={CHART_MARGIN} barCategoryGap="28%">
-        <ChartGrid />
-        <ChartXAxis dataKey="label" />
-        <ChartYAxis allowDecimals={false} />
-        <ChartTooltip />
-        <Bar dataKey="count" name="Students" radius={BAR_RADIUS}>
-          {chartData.map((entry, index) => (
-            <Cell key={index} fill={entry.color} />
+      <PieChart margin={{ top: 8, right: 8, left: 8, bottom: 8 }}>
+        <ChartTooltip
+          valueFormatter={(value) =>
+            `${value} student${value === 1 ? "" : "s"}`
+          }
+        />
+        <Pie
+          data={chartData}
+          dataKey="count"
+          nameKey="label"
+          cx="50%"
+          cy="46%"
+          innerRadius={62}
+          outerRadius={96}
+          paddingAngle={chartData.length > 1 ? 3 : 0}
+          stroke="#fff"
+          strokeWidth={3}
+        >
+          {chartData.map((entry) => (
+            <Cell key={entry.label} fill={entry.color} />
           ))}
-        </Bar>
-      </BarChart>
+          <Label
+            content={(props) => (
+              <AtRiskCenterLabel
+                viewBox={props.viewBox as { cx?: number; cy?: number } | undefined}
+                total={data.length}
+              />
+            )}
+            position="center"
+          />
+        </Pie>
+        <Legend
+          verticalAlign="bottom"
+          content={() => (
+            <div className="flex justify-center gap-6 pt-1 text-xs font-bold text-slate-600">
+              <span className="inline-flex items-center gap-2">
+                <span
+                  className="h-2.5 w-2.5 rounded-full"
+                  style={{ backgroundColor: CHART_COLORS.primary }}
+                />
+                On Track: {onTrackCount}
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <span
+                  className="h-2.5 w-2.5 rounded-full"
+                  style={{ backgroundColor: CHART_COLORS.alert }}
+                />
+                AT RISK: {atRiskCount}
+              </span>
+            </div>
+          )}
+        />
+      </PieChart>
     </ChartFrame>
   );
 }
@@ -104,13 +227,11 @@ function AvgDaysPerStageChartInner({
   const chartData = MILESTONES.map(({ key, label }) => {
     const days: number[] = [];
     for (const row of data) {
-      const target = row[`${key}_target` as keyof EnrolmentMilestoneRow];
-      const actual = row[`${key}_actual` as keyof EnrolmentMilestoneRow];
+      const target = getMilestoneTarget(row, key);
+      const actual = getMilestoneActual(row, key);
       if (actual && target) {
         const diff =
-          (new Date(String(actual)).getTime() -
-            new Date(String(target)).getTime()) /
-          (1000 * 60 * 60 * 24);
+          (actual.getTime() - target.getTime()) / (1000 * 60 * 60 * 24);
         days.push(Math.abs(diff));
       }
     }

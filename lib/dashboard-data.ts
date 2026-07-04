@@ -1,6 +1,7 @@
 import { buildAlertTray, getArStatus, getSalesRag, getVisaAlerts, isStudentAtRisk } from "./alerts";
 import type { ReportType } from "./constants";
 import { KPI, PILLAR_ROUTES, REPORT_TYPE_LABELS } from "./constants";
+import { normalizeEnrolmentRows } from "./enrolment-dates";
 import { formatAud, formatDate, formatPct } from "./format";
 import {
   flattenSnapshotRows,
@@ -141,6 +142,7 @@ function buildOverviewFromSample() {
   const sample = getAllSampleData();
   return buildOverviewCards({
     ...sample,
+    enrolment: normalizeEnrolmentRows(sample.enrolment),
     salesSparkline: sample.sales.map((row) => row.lead_to_reg_pct),
     placementSparkline: sample.placement.map((row) => row.successfully_placed_jobs),
     centresSparkline: [sample.centres.reduce((sum, row) => sum + row.active_year1_students, 0)],
@@ -173,7 +175,9 @@ export async function getDashboardOverview() {
     ]);
 
     const sales = flattenSnapshotRows<SalesPipelineRow>(salesSnapshots);
-    const enrolment = flattenSnapshotRows<EnrolmentMilestoneRow>(enrolmentSnapshots);
+    const enrolment = normalizeEnrolmentRows(
+      flattenSnapshotRows<EnrolmentMilestoneRow>(enrolmentSnapshots),
+    );
     const visa = flattenSnapshotRows<VisaLodgementRow>(visaSnapshots);
     const accounts = flattenSnapshotRows<AccountsReceivableRow>(accountsSnapshots);
     const placement = flattenSnapshotRows<JobPlacementRow>(placementSnapshots);
@@ -237,7 +241,10 @@ export async function getPillarData<T>(reportType: ReportType) {
 
   if (!process.env.DATABASE_URL) {
     return {
-      rows: sampleRows,
+      rows:
+        reportType === "enrolment_milestones"
+          ? (normalizeEnrolmentRows(sampleRows as EnrolmentMilestoneRow[]) as T[])
+          : sampleRows,
       hasDatabase: false,
       usingSampleData: sampleRows.length > 0,
     };
@@ -245,18 +252,27 @@ export async function getPillarData<T>(reportType: ReportType) {
 
   try {
     const snapshots = await getSnapshotsFromLatestUpload(reportType);
-    const rows = flattenSnapshotRows<T>(snapshots);
+    let rows = flattenSnapshotRows<T>(snapshots);
+    if (reportType === "enrolment_milestones" && rows.length > 0) {
+      rows = normalizeEnrolmentRows(rows as EnrolmentMilestoneRow[]) as T[];
+    }
     if (rows.length > 0) {
       return { rows, hasDatabase: true, usingSampleData: false };
     }
     return {
-      rows: sampleRows,
+      rows:
+        reportType === "enrolment_milestones"
+          ? (normalizeEnrolmentRows(sampleRows as EnrolmentMilestoneRow[]) as T[])
+          : sampleRows,
       hasDatabase: true,
       usingSampleData: sampleRows.length > 0,
     };
   } catch {
     return {
-      rows: sampleRows,
+      rows:
+        reportType === "enrolment_milestones"
+          ? (normalizeEnrolmentRows(sampleRows as EnrolmentMilestoneRow[]) as T[])
+          : sampleRows,
       hasDatabase: false,
       usingSampleData: sampleRows.length > 0,
     };

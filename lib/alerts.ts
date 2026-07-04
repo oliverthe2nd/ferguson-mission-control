@@ -1,3 +1,4 @@
+import { getMilestoneActual, getMilestoneTarget } from "./enrolment-dates";
 import { KPI } from "./constants";
 import type { AccountsReceivableRow } from "./validators/accounts-receivable";
 import type { EnrolmentMilestoneRow } from "./validators/enrolment-milestones";
@@ -29,11 +30,11 @@ export function getSalesRag(row: SalesPipelineRow): RagStatus {
 
 export function isStudentAtRisk(row: EnrolmentMilestoneRow, now = new Date()): boolean {
   for (const key of MILESTONES) {
-    const target = row[`${key}_target`];
-    const actual = row[`${key}_actual`];
+    const target = getMilestoneTarget(row, key);
+    const actual = getMilestoneActual(row, key);
     if (actual === null && target) {
       const daysOverdue =
-        (now.getTime() - new Date(target).getTime()) / (1000 * 60 * 60 * 24);
+        (now.getTime() - target.getTime()) / (1000 * 60 * 60 * 24);
       if (daysOverdue > KPI.MILESTONE_STALL_DAYS) return true;
     }
   }

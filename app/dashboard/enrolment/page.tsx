@@ -8,7 +8,7 @@ import { ChartCard } from "@/components/dashboard/chart-card";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { getPillarData, isStudentAtRisk } from "@/lib/dashboard-data";
-import { formatDate } from "@/lib/format";
+import { formatOptionalDate } from "@/lib/format";
 import type { EnrolmentMilestoneRow } from "@/lib/validators/enrolment-milestones";
 
 export default async function EnrolmentDashboardPage() {
@@ -35,13 +35,18 @@ export default async function EnrolmentDashboardPage() {
       )}
       {usingSampleData && (
         <div className="liquid-glass mb-6 rounded-[1.25rem] border border-emerald-200/60 bg-white/55 px-4 py-3 text-sm text-dark shadow-[0_12px_40px_rgba(32,201,151,0.08)] backdrop-blur-xl">
-          Showing uploaded sample data ({rows.length} students, {atRiskCount} AT
-          RISK) from{" "}
-          <code className="font-mono text-xs">
-            enrolment-milestones-generated.csv
-          </code>
-          . Connect a database and upload via /upload to persist live data.
+          Showing sample template data ({rows.length} students, {atRiskCount} AT
+          RISK). Upload live reports at{" "}
+          <a href="/upload" className="font-bold text-emerald-700 underline">
+            /upload
+          </a>
+          .
         </div>
+      )}
+      {!usingSampleData && rows.length > 0 && (
+        <p className="mb-4 text-sm font-medium text-slate-600">
+          Latest upload: {rows.length} students in cohort.
+        </p>
       )}
       {rows.length === 0 ? (
         <EmptyState />
@@ -78,9 +83,7 @@ export default async function EnrolmentDashboardPage() {
                         {row.student_id}
                       </td>
                       <td className="px-3 py-2">
-                        {row.registration_date
-                          ? formatDate(row.registration_date)
-                          : "—"}
+                        {formatOptionalDate(row.registration_date) ?? "—"}
                       </td>
                       <td className="px-3 py-2">
                         {isStudentAtRisk(row) ? (

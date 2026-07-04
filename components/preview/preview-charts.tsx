@@ -72,13 +72,13 @@ export function PreviewCharts() {
         <div className="grid gap-4 lg:grid-cols-3">
           <ChartCard
             title="Milestone Funnel"
-            subtitle="Horizontal bar · completion by stage"
+            subtitle="Stacked bar · completed vs total cohort"
           >
             <MilestoneFunnelChart data={sampleEnrolment} />
           </ChartCard>
           <ChartCard
             title="AT RISK Overview"
-            subtitle="Bar · students on track vs at risk"
+            subtitle="Pie · on track vs at risk"
           >
             <AtRiskTrendChart data={sampleEnrolment} />
           </ChartCard>

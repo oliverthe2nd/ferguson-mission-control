@@ -6,7 +6,7 @@ import { ChartErrorBoundary } from "@/components/ui/chart-error-boundary";
 import { ChartSkeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CHART_COLORS } from "@/lib/constants";
-import { monthKey, monthLabelFromKey } from "@/lib/format";
+import { monthKey, monthLabelFromKey, monthOnlyLabelFromKey } from "@/lib/format";
 import type { VisaLodgementRow } from "@/lib/validators/visa-lodgement";
 import { cn } from "@/lib/utils";
 import {
@@ -154,8 +154,15 @@ function LodgementTrendChartInner({
     return data.filter((row) => monthKey(row.period).startsWith(String(selectedYear)));
   }, [data, selectedYear]);
 
-  const chartData = useMemo(() => aggregateLodgedByMonth(filteredRows), [filteredRows]);
-  const denseAxis = chartData.length > 12;
+  const chartData = useMemo(() => {
+    const aggregated = aggregateLodgedByMonth(filteredRows);
+    if (selectedYear === "all") return aggregated;
+    return aggregated.map((row) => ({
+      ...row,
+      period: monthOnlyLabelFromKey(row.monthKey),
+    }));
+  }, [filteredRows, selectedYear]);
+  const denseAxis = selectedYear === "all" && chartData.length > 12;
   const xAxisHeight = denseAxis ? 56 : 36;
   const chartBottomMargin = denseAxis ? 52 : 24;
 

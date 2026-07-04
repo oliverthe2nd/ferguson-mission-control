@@ -83,3 +83,11 @@ export function monthLabelFromKey(key: string): string {
     timeZone: "UTC",
   });
 }
+
+export function monthOnlyLabelFromKey(key: string): string {
+  const match = key.match(/^(\d{4})-(\d{2})$/);
+  if (!match) return key;
+
+  const date = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, 1));
+  return date.toLocaleDateString("en-AU", { month: "short", timeZone: "UTC" });
+}

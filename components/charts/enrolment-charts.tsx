@@ -69,68 +69,22 @@ function MilestoneFunnelChartInner({
   if (loading) return <ChartSkeleton />;
   if (data.length === 0) return <EmptyState />;
 
-  const totalStudents = data.length;
-
   const chartData = MILESTONES.map(({ key, label }) => {
     const completed = data.filter((row) => getMilestoneActual(row, key) !== null).length;
-    return {
-      stage: label,
-      completed,
-      remaining: totalStudents - completed,
-      total: totalStudents,
-    };
+    return { stage: label, completed };
   });
 
   return (
     <ChartFrame>
-      <BarChart
-        data={chartData}
-        layout="vertical"
-        margin={{ ...CHART_MARGIN, left: 8, right: 8 }}
-        barCategoryGap="22%"
-      >
+      <BarChart data={chartData} layout="vertical" margin={{ ...CHART_MARGIN, left: 8 }}>
         <ChartGrid vertical />
-        <ChartXAxis
-          type="number"
-          allowDecimals={false}
-          domain={[0, totalStudents]}
-          tickFormatter={(value) => (value === totalStudents ? `${value}` : String(value))}
-        />
-        <ChartYAxis
-          type="category"
-          dataKey="stage"
-          width={118}
-          tick={{ fontSize: 11 }}
-        />
-        <ChartTooltip
-          valueFormatter={(value, name) => {
-            if (name === "Completed") {
-              const completed = Number(value);
-              const pct = totalStudents
-                ? Math.round((completed / totalStudents) * 100)
-                : 0;
-              return `${completed} of ${totalStudents} (${pct}%)`;
-            }
-            return String(value);
-          }}
-        />
-        <Bar dataKey="completed" name="Completed" stackId="cohort" fill={CHART_COLORS.primary}>
-          <LabelList
-            dataKey="completed"
-            position="insideLeft"
-            offset={8}
-            formatter={(value) => {
-              const completed = Number(value);
-              return completed > 0 ? `${completed}/${totalStudents}` : "";
-            }}
-            style={{ fill: "#fff", fontSize: 10, fontWeight: 700 }}
-          />
-        </Bar>
+        <ChartXAxis type="number" allowDecimals={false} />
+        <ChartYAxis type="category" dataKey="stage" width={118} tick={{ fontSize: 11 }} />
+        <ChartTooltip />
         <Bar
-          dataKey="remaining"
-          name="Not completed"
-          stackId="cohort"
-          fill={CHART_COLORS.grid}
+          dataKey="completed"
+          name="Completed"
+          fill={CHART_COLORS.primary}
           radius={BAR_RADIUS_H}
         />
       </BarChart>
@@ -244,7 +198,7 @@ function AvgDaysPerStageChartInner({
       ? chartData.reduce((sum, row) => sum + row.avgDays, 0) / chartData.length
       : 0;
   const barMax = Math.max(...chartData.map((row) => row.avgDays), 0);
-  const xMax = barMax === 0 ? 10 : Math.ceil(barMax * 1.08);
+  const xMax = barMax === 0 ? 10 : Math.ceil(barMax * 1.12);
 
   const formatDays = (value: number) => {
     const n = Number.isInteger(value) ? value : Number(value.toFixed(1));
@@ -256,7 +210,7 @@ function AvgDaysPerStageChartInner({
       <BarChart
         data={chartData}
         layout="vertical"
-        margin={{ ...CHART_MARGIN, left: 8, right: 4, bottom: 28 }}
+        margin={{ ...CHART_MARGIN, left: 8, right: 48, bottom: 28 }}
         barCategoryGap="22%"
       >
         <ChartGrid vertical />
@@ -304,14 +258,13 @@ function AvgDaysPerStageChartInner({
         >
           <LabelList
             dataKey="avgDays"
-            position="insideRight"
-            offset={-10}
+            position="right"
+            offset={6}
             formatter={(value) => formatDays(Number(value))}
             style={{
-              fill: "#fff",
+              fill: CHART_COLORS.dark,
               fontSize: 11,
               fontWeight: 700,
-              textShadow: "0 1px 2px rgba(31,42,61,0.35)",
             }}
           />
         </Bar>

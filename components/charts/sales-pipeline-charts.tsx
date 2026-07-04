@@ -8,8 +8,6 @@ import { CHART_COLORS } from "@/lib/constants";
 import { formatPct, formatShortDate } from "@/lib/format";
 import type { SalesPipelineRow } from "@/lib/validators/sales-pipeline";
 import {
-  BAR_RADIUS_STACK_BOTTOM,
-  BAR_RADIUS_STACK_TOP,
   CHART_MARGIN,
   ChartFrame,
   ChartGrid,
@@ -17,6 +15,7 @@ import {
   ChartTooltip,
   ChartXAxis,
   ChartYAxis,
+  createStackBarShape,
   LINE_PROPS,
   SERIES_COLORS,
   sortByDate,
@@ -46,6 +45,7 @@ function LeadSourceBarChartInner({
     { key: "Walk-in", color: SERIES_COLORS[2] },
     { key: "Other", color: SERIES_COLORS[3] },
   ] as const;
+  const seriesKeys = series.map(({ key }) => key);
 
   return (
     <ChartFrame>
@@ -55,19 +55,13 @@ function LeadSourceBarChartInner({
         <ChartYAxis allowDecimals={false} />
         <ChartTooltip />
         <ChartLegend />
-        {series.map(({ key, color }, index) => (
+        {series.map(({ key, color }) => (
           <Bar
             key={key}
             dataKey={key}
             stackId="leads"
             fill={color}
-            radius={
-              index === 0
-                ? BAR_RADIUS_STACK_BOTTOM
-                : index === series.length - 1
-                  ? BAR_RADIUS_STACK_TOP
-                  : [0, 0, 0, 0]
-            }
+            shape={createStackBarShape(key, seriesKeys)}
           />
         ))}
       </BarChart>

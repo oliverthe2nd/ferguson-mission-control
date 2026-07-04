@@ -4,11 +4,13 @@ import type { ReactElement } from "react";
 import {
   CartesianGrid,
   Legend,
+  Rectangle,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
+import type { BarShapeProps } from "recharts";
 import { CHART_COLORS } from "@/lib/constants";
 
 export const CHART_HEIGHT = 270;
@@ -37,6 +39,45 @@ export const BAR_RADIUS: [number, number, number, number] = [12, 12, 0, 0];
 export const BAR_RADIUS_H: [number, number, number, number] = [0, 12, 12, 0];
 export const BAR_RADIUS_STACK_BOTTOM: [number, number, number, number] = [0, 0, 10, 10];
 export const BAR_RADIUS_STACK_TOP: [number, number, number, number] = [10, 10, 0, 0];
+
+export function stackBarRadius(
+  seriesKey: string,
+  payload: Record<string, unknown>,
+  seriesKeys: readonly string[],
+): [number, number, number, number] {
+  const active = seriesKeys.filter((key) => Number(payload[key] ?? 0) > 0);
+  if (active.length === 0) return [0, 0, 0, 0];
+
+  const bottom = active[0]!;
+  const top = active[active.length - 1]!;
+
+  if (bottom === top) return BAR_RADIUS;
+  if (seriesKey === bottom) return BAR_RADIUS_STACK_BOTTOM;
+  if (seriesKey === top) return BAR_RADIUS_STACK_TOP;
+  return [0, 0, 0, 0];
+}
+
+export function createStackBarShape(
+  seriesKey: string,
+  seriesKeys: readonly string[],
+) {
+  return function StackBarShape(props: BarShapeProps) {
+    const { x = 0, y = 0, width = 0, height = 0, fill, payload } = props;
+    if (!payload || height <= 0) return null;
+
+    const radius = stackBarRadius(seriesKey, payload, seriesKeys);
+    return (
+      <Rectangle
+        x={x}
+        y={y}
+        width={width}
+        height={height}
+        fill={fill}
+        radius={radius}
+      />
+    );
+  };
+}
 
 export const LINE_PROPS = {
   type: "monotone" as const,

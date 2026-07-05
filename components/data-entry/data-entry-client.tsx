@@ -4,9 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import useSWR from "swr";
 import type { EditableReportType } from "@/lib/constants";
-import { REPORT_TYPE_LABELS } from "@/lib/constants";
 import { SpreadsheetEditor, type DataEntryMode } from "./spreadsheet-editor";
-import { cn } from "@/lib/utils";
 
 type DataEntryClientProps = {
   reportType: EditableReportType;
@@ -57,7 +55,7 @@ export function DataEntryClient({ reportType, mode = "full" }: DataEntryClientPr
   };
 
   if (isLoading) {
-    return <p className="text-sm text-slate-500">Loading current data…</p>;
+    return <p className="text-sm text-slate-500">Loading…</p>;
   }
 
   if (error) {
@@ -69,58 +67,15 @@ export function DataEntryClient({ reportType, mode = "full" }: DataEntryClientPr
   }
 
   const displayRows = data?.rows ?? [];
-  const basePath = `/data-entry/${reportType}`;
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap gap-2 rounded-lg border border-slate-200 bg-white p-1">
-        <Link
-          href={basePath}
-          className={cn(
-            "rounded-md px-4 py-2 text-sm font-medium transition",
-            mode === "full"
-              ? "bg-emerald-600 text-white"
-              : "text-slate-600 hover:bg-slate-50",
-          )}
-        >
-          Edit all rows
-        </Link>
-        <Link
-          href={`${basePath}?mode=add`}
-          className={cn(
-            "rounded-md px-4 py-2 text-sm font-medium transition",
-            mode === "append"
-              ? "bg-emerald-600 text-white"
-              : "text-slate-600 hover:bg-slate-50",
-          )}
-        >
-          Add new entries
-        </Link>
-      </div>
-
-      <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-        <p className="font-medium text-slate-800">{REPORT_TYPE_LABELS[reportType]}</p>
-        {mode === "append" ? (
-          <p className="mt-1">
-            Enter new rows below. They will be appended to the{" "}
-            {displayRows.length > 0 ? `${displayRows.length} existing` : "current"} live entries
-            after approval.
-          </p>
-        ) : data?.lastUpload ? (
-          <p className="mt-1">
-            Live data from <span className="font-medium">{data.lastUpload.fileName}</span>
-          </p>
-        ) : (
-          <p className="mt-1">No live upload yet — add rows and submit for approval.</p>
-        )}
-      </div>
-
+    <div className="space-y-3">
       {data?.pendingSubmission && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-          Submission pending since{" "}
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+          Pending approval since{" "}
           {new Date(data.pendingSubmission.submittedAt).toLocaleString("en-AU")}.{" "}
           <a href={`/approvals/${data.pendingSubmission.id}`} className="font-medium underline">
-            View status
+            View
           </a>
         </div>
       )}
@@ -130,6 +85,8 @@ export function DataEntryClient({ reportType, mode = "full" }: DataEntryClientPr
         reportType={reportType}
         initialRows={displayRows}
         mode={mode}
+        basePath={`/data-entry/${reportType}`}
+        lastUpload={data?.lastUpload ?? null}
         pendingSubmissionId={data?.pendingSubmission?.id}
         onSubmit={handleSubmit}
       />

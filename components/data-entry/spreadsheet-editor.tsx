@@ -1,8 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { Plus, Search } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { EditableReportType } from "@/lib/constants";
+import { REPORT_TYPE_LABELS } from "@/lib/constants";
 import {
   emptyEditorRow,
   getSearchPlaceholder,
@@ -20,6 +22,7 @@ import {
 } from "@/lib/row-format";
 import { Button } from "@/components/ui/button";
 import { EdgeScrollContainer } from "@/components/ui/edge-scroll-container";
+import { cn } from "@/lib/utils";
 import { DATA_ENTRY_PAGE_SIZE, TablePagination } from "./table-pagination";
 
 export type DataEntryMode = "full" | "append";
@@ -28,6 +31,8 @@ type SpreadsheetEditorProps = {
   reportType: EditableReportType;
   initialRows: Record<string, unknown>[];
   mode?: DataEntryMode;
+  basePath: string;
+  lastUpload: { fileName: string; createdAt: string } | null;
   pendingSubmissionId?: string | null;
   onSubmit: (rows: Record<string, unknown>[], baselineRows: Record<string, unknown>[]) => Promise<void>;
 };
@@ -77,6 +82,8 @@ export function SpreadsheetEditor({
   reportType,
   initialRows,
   mode = "full",
+  basePath,
+  lastUpload,
   pendingSubmissionId,
   onSubmit,
 }: SpreadsheetEditorProps) {
@@ -213,67 +220,66 @@ export function SpreadsheetEditor({
   const isLocked = Boolean(pendingSubmissionId);
   const newRowCount = rows.filter((row) => isNewRow(row)).length;
   const isFiltering = searchQuery.trim().length > 0;
+  const rowSummary = isAppendMode
+    ? `${newRowCount} new`
+    : isFiltering
+      ? `${matchingIndices.length} of ${rows.length}`
+      : `${rows.length} rows`;
 
   return (
-    <div className="space-y-4">
-      {pendingSubmissionId && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-          A submission for this report is awaiting approval. Editing is locked until
-          Oliver, Sarika, or Ian reviews it.
-        </div>
-      )}
-
-      {isAppendMode && (
-        <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
-          Add new entries only — existing {baselineRows.length} live row
-          {baselineRows.length === 1 ? "" : "s"} stay unchanged and are merged on approval.
-        </div>
-      )}
-
-      <div className="relative">
-        <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
-        <input
-          type="search"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder={getSearchPlaceholder(reportType)}
-          className="w-full rounded-xl border border-slate-200 bg-white py-3.5 pl-12 pr-4 text-base shadow-sm placeholder:text-slate-400 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100"
-        />
-      </div>
-
-      {isFiltering && (
-        <p className="text-sm font-medium text-slate-600">
-          {matchingIndices.length} of {rows.length} rows match your search
-        </p>
-      )}
-
-      <div className="sticky top-20 z-[5] flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white/95 p-3 shadow-sm backdrop-blur-sm">
-        <div className="text-sm text-slate-600">
-          {isAppendMode ? (
-            <span>
-              {newRowCount} new {newRowCount === 1 ? "entry" : "entries"} ready to submit
-            </span>
-          ) : (
-            <span>
-              {rows.length} rows
-              {newRowCount > 0 && (
-                <span className="ml-2 text-emerald-700">· {newRowCount} new</span>
+    <div className="space-y-3">
+      <div className="sticky top-20 z-[5] space-y-2 rounded-xl border border-slate-200 bg-white/95 p-2 shadow-sm backdrop-blur-sm sm:space-y-0">
+        <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
+          <div className="flex shrink-0 rounded-lg border border-slate-200 bg-slate-50 p-0.5">
+            <Link
+              href={basePath}
+              className={cn(
+                "rounded-md px-3 py-1.5 text-sm font-semibold transition",
+                mode === "full"
+                  ? "bg-white text-emerald-800 shadow-sm"
+                  : "text-slate-600 hover:text-slate-900",
               )}
-            </span>
-          )}
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="secondary" onClick={addRow} disabled={isLocked}>
-            <Plus className="mr-1.5 h-4 w-4" />
-            Add new entry
-          </Button>
-          <Button onClick={handleSubmit} disabled={submitting || isLocked}>
-            {submitting ? "Submitting…" : "Submit for approval"}
-          </Button>
+            >
+              Edit all
+            </Link>
+            <Link
+              href={`${basePath}?mode=add`}
+              className={cn(
+                "rounded-md px-3 py-1.5 text-sm font-semibold transition",
+                mode === "append"
+                  ? "bg-white text-emerald-800 shadow-sm"
+                  : "text-slate-600 hover:text-slate-900",
+              )}
+            >
+              Add new
+            </Link>
+          </div>
+
+          <div className="relative min-w-0 flex-1">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={getSearchPlaceholder(reportType)}
+              className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm placeholder:text-slate-400 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100"
+            />
+          </div>
+
+          <div className="flex shrink-0 items-center justify-between gap-2 sm:justify-end">
+            <span className="text-xs font-medium text-slate-500">{rowSummary}</span>
+            <Button variant="secondary" onClick={addRow} disabled={isLocked} className="px-3 py-1.5 text-sm">
+              <Plus className="mr-1 h-4 w-4" />
+              Add row
+            </Button>
+            <Button onClick={handleSubmit} disabled={submitting || isLocked} className="px-3 py-1.5 text-sm">
+              {submitting ? "Submitting…" : "Submit"}
+            </Button>
+          </div>
         </div>
       </div>
 
-      <EdgeScrollContainer className="max-h-[min(65vh,40rem)] rounded-lg border border-slate-200 bg-white">
+      <EdgeScrollContainer className="max-h-[min(70vh,44rem)] rounded-lg border border-slate-200 bg-white">
         <table className="min-w-full text-left text-sm">
           <thead className="sticky top-0 z-[1] border-b border-slate-200 bg-slate-50">
             <tr>
@@ -364,6 +370,24 @@ export function SpreadsheetEditor({
           Submitted for approval. Oliver, Sarika, or Ian will review before changes go live.
         </p>
       )}
+
+      <p className="border-t border-slate-100 pt-3 text-xs text-slate-500">
+        {REPORT_TYPE_LABELS[reportType]}
+        {" · "}
+        {mode === "append" ? (
+          <>
+            Add-only mode — {baselineRows.length} existing row
+            {baselineRows.length === 1 ? "" : "s"} merged on approval
+          </>
+        ) : lastUpload ? (
+          <>Live data from {lastUpload.fileName}</>
+        ) : (
+          <>No live upload yet</>
+        )}
+        {newRowCount > 0 && mode === "full" && (
+          <span className="text-emerald-700"> · {newRowCount} unsaved new row{newRowCount === 1 ? "" : "s"}</span>
+        )}
+      </p>
     </div>
   );
 }

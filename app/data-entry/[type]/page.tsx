@@ -28,11 +28,6 @@ export default async function DataEntryTypePage({ params, searchParams }: PagePr
     <DashboardShell>
       <PageHeader
         title={`${REPORT_TYPE_LABELS[type]} — Data Entry`}
-        description={
-          mode === "append"
-            ? "Add new entries below. Existing live data is kept and merged after approval."
-            : "Edit rows below and submit for approval. Live dashboards update only after review."
-        }
       />
       <DataEntryClient reportType={type} mode={mode} />
     </DashboardShell>

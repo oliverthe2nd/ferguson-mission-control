@@ -1,11 +1,14 @@
 "use client";
 
-import { Plus } from "lucide-react";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { Plus, Search } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { EditableReportType } from "@/lib/constants";
 import {
   emptyEditorRow,
+  getSearchPlaceholder,
   REPORT_COLUMNS,
+  REPORT_SEARCH_KEYS,
+  rowMatchesSearch,
   type ReportColumn,
 } from "@/lib/report-columns";
 import {
@@ -17,6 +20,7 @@ import {
 } from "@/lib/row-format";
 import { Button } from "@/components/ui/button";
 import { EdgeScrollContainer } from "@/components/ui/edge-scroll-container";
+import { DATA_ENTRY_PAGE_SIZE, TablePagination } from "./table-pagination";
 
 export type DataEntryMode = "full" | "append";
 
@@ -77,6 +81,7 @@ export function SpreadsheetEditor({
   onSubmit,
 }: SpreadsheetEditorProps) {
   const columns = REPORT_COLUMNS[reportType];
+  const searchKeys = REPORT_SEARCH_KEYS[reportType];
   const isAppendMode = mode === "append";
   const baselineRows = useMemo(
     () => editorToRows(rowsToEditor(initialRows, columns), columns),
@@ -94,10 +99,36 @@ export function SpreadsheetEditor({
     if (initialRows.length === 0) return [emptyEditorRow(reportType)];
     return rowsToEditor(initialRows, columns);
   });
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const rowRefs = useRef<Map<number, HTMLTableRowElement>>(new Map());
+
+  const matchingIndices = useMemo(() => {
+    return rows
+      .map((row, index) => ({ row, index }))
+      .filter(({ row }) => rowMatchesSearch(row, searchQuery, searchKeys))
+      .map(({ index }) => index);
+  }, [rows, searchQuery, searchKeys]);
+
+  const totalPages = Math.max(1, Math.ceil(matchingIndices.length / DATA_ENTRY_PAGE_SIZE));
+
+  const pageIndices = useMemo(() => {
+    const start = (currentPage - 1) * DATA_ENTRY_PAGE_SIZE;
+    return matchingIndices.slice(start, start + DATA_ENTRY_PAGE_SIZE);
+  }, [matchingIndices, currentPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
 
   const scrollToRow = useCallback((index: number) => {
     requestAnimationFrame(() => {
@@ -124,9 +155,12 @@ export function SpreadsheetEditor({
   );
 
   const addRow = useCallback(() => {
+    setSearchQuery("");
     setRows((current) => {
+      const nextIndex = current.length;
       const next = [...current, emptyEditorRow(reportType)];
-      scrollToRow(next.length - 1);
+      setCurrentPage(Math.ceil(next.length / DATA_ENTRY_PAGE_SIZE));
+      scrollToRow(nextIndex);
       return next;
     });
     setSuccess(false);
@@ -178,6 +212,7 @@ export function SpreadsheetEditor({
 
   const isLocked = Boolean(pendingSubmissionId);
   const newRowCount = rows.filter((row) => isNewRow(row)).length;
+  const isFiltering = searchQuery.trim().length > 0;
 
   return (
     <div className="space-y-4">
@@ -193,6 +228,23 @@ export function SpreadsheetEditor({
           Add new entries only — existing {baselineRows.length} live row
           {baselineRows.length === 1 ? "" : "s"} stay unchanged and are merged on approval.
         </div>
+      )}
+
+      <div className="relative">
+        <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+        <input
+          type="search"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder={getSearchPlaceholder(reportType)}
+          className="w-full rounded-xl border border-slate-200 bg-white py-3.5 pl-12 pr-4 text-base shadow-sm placeholder:text-slate-400 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100"
+        />
+      </div>
+
+      {isFiltering && (
+        <p className="text-sm font-medium text-slate-600">
+          {matchingIndices.length} of {rows.length} rows match your search
+        </p>
       )}
 
       <div className="sticky top-20 z-[5] flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white/95 p-3 shadow-sm backdrop-blur-sm">
@@ -237,50 +289,70 @@ export function SpreadsheetEditor({
             </tr>
           </thead>
           <tbody>
-            {rows.map((row, rowIndex) => {
-              const isNew = isNewRow(row);
-              return (
-                <tr
-                  key={rowIndex}
-                  ref={(el) => {
-                    if (el) rowRefs.current.set(rowIndex, el);
-                    else rowRefs.current.delete(rowIndex);
-                  }}
-                  className={
-                    isNew
-                      ? "border-b border-emerald-100 bg-emerald-50/60"
-                      : "border-b border-slate-100"
-                  }
+            {pageIndices.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={columns.length + (isAppendMode ? 1 : 2)}
+                  className="px-4 py-10 text-center text-sm text-slate-500"
                 >
-                  {!isAppendMode && (
-                    <td className="px-2 py-1.5 text-xs text-slate-400">{rowIndex + 1}</td>
-                  )}
-                  {columns.map((col) => (
-                    <td key={col.key} className="px-2 py-1.5">
-                      <CellInput
-                        column={col}
-                        value={row[col.key] ?? ""}
-                        onChange={(value) => updateCell(rowIndex, col.key, value)}
+                  No rows match your search.
+                </td>
+              </tr>
+            ) : (
+              pageIndices.map((rowIndex) => {
+                const row = rows[rowIndex];
+                const isNew = isNewRow(row);
+                return (
+                  <tr
+                    key={rowIndex}
+                    ref={(el) => {
+                      if (el) rowRefs.current.set(rowIndex, el);
+                      else rowRefs.current.delete(rowIndex);
+                    }}
+                    className={
+                      isNew
+                        ? "border-b border-emerald-100 bg-emerald-50/60"
+                        : "border-b border-slate-100"
+                    }
+                  >
+                    {!isAppendMode && (
+                      <td className="px-2 py-1.5 text-xs text-slate-400">{rowIndex + 1}</td>
+                    )}
+                    {columns.map((col) => (
+                      <td key={col.key} className="px-2 py-1.5">
+                        <CellInput
+                          column={col}
+                          value={row[col.key] ?? ""}
+                          onChange={(value) => updateCell(rowIndex, col.key, value)}
+                          disabled={isLocked}
+                        />
+                      </td>
+                    ))}
+                    <td className="px-2 py-1.5">
+                      <button
+                        type="button"
+                        onClick={() => removeRow(rowIndex)}
                         disabled={isLocked}
-                      />
+                        className="text-xs font-medium text-red-600 hover:text-red-800 disabled:opacity-40"
+                      >
+                        Remove
+                      </button>
                     </td>
-                  ))}
-                  <td className="px-2 py-1.5">
-                    <button
-                      type="button"
-                      onClick={() => removeRow(rowIndex)}
-                      disabled={isLocked}
-                      className="text-xs font-medium text-red-600 hover:text-red-800 disabled:opacity-40"
-                    >
-                      Remove
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
+                  </tr>
+                );
+              })
+            )}
           </tbody>
         </table>
       </EdgeScrollContainer>
+
+      <TablePagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={matchingIndices.length}
+        pageSize={DATA_ENTRY_PAGE_SIZE}
+        onPageChange={setCurrentPage}
+      />
 
       {error && (
         <p className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">

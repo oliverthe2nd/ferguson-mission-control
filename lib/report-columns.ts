@@ -79,3 +79,39 @@ export function emptyEditorRow(reportType: EditableReportType): Record<string, s
     REPORT_COLUMNS[reportType].map((col) => [col.key, col.type === "enum" && col.options?.[0] ? col.options[0] : ""]),
   );
 }
+
+/** Column keys used by the data-entry search box (substring match, case-insensitive). */
+export const REPORT_SEARCH_KEYS: Record<EditableReportType, string[]> = {
+  enrolment_milestones: ["student_id", "student_name"],
+  visa_lodgement: ["visa_subclass", "period"],
+  accounts_receivable: ["school_name", "invoice_ref"],
+  job_placement: ["period"],
+  study_centres: ["branch", "period"],
+};
+
+export function getSearchPlaceholder(reportType: EditableReportType): string {
+  switch (reportType) {
+    case "enrolment_milestones":
+      return "Search by student name or ID…";
+    case "accounts_receivable":
+      return "Search by school or invoice ref…";
+    case "visa_lodgement":
+      return "Search by visa subclass or period…";
+    case "job_placement":
+      return "Search by period…";
+    case "study_centres":
+      return "Search by branch or period…";
+    default:
+      return "Search rows…";
+  }
+}
+
+export function rowMatchesSearch(
+  row: Record<string, string>,
+  query: string,
+  searchKeys: string[],
+): boolean {
+  const trimmed = query.trim().toLowerCase();
+  if (!trimmed) return true;
+  return searchKeys.some((key) => (row[key] ?? "").toLowerCase().includes(trimmed));
+}

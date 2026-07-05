@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Plus, Table2 } from "lucide-react";
 import { PageHeader } from "@/components/layout/app-shell";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { requireDataEntryAccess } from "@/lib/auth";
@@ -19,7 +20,7 @@ export default async function DataEntryPage() {
     <DashboardShell>
       <PageHeader
         title="Data Entry"
-        description="Edit report data in a spreadsheet view. Changes require approval from Oliver, Sarika, or Ian before going live."
+        description="Edit existing data or add new entries for each pillar. Changes require approval from Oliver, Sarika, or Ian before going live."
       />
 
       {!process.env.DATABASE_URL && (
@@ -30,19 +31,34 @@ export default async function DataEntryPage() {
 
       <div className="grid gap-4 sm:grid-cols-2">
         {EDITABLE_REPORT_TYPES.map((type) => (
-          <Link
+          <div
             key={type}
-            href={`/data-entry/${type}`}
-            className="rounded-xl border border-slate-200 bg-white p-5 transition hover:border-emerald-300 hover:shadow-md"
+            className="rounded-xl border border-slate-200 bg-white p-5"
           >
             <p className="font-semibold text-slate-900">{REPORT_TYPE_LABELS[type]}</p>
             <p className="mt-1 text-sm text-slate-500">
-              Edit {REPORT_TYPE_LABELS[type].toLowerCase()} data
+              Edit existing rows or add new entries
             </p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Link
+                href={`/data-entry/${type}`}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-800"
+              >
+                <Table2 className="h-4 w-4" />
+                Edit all rows
+              </Link>
+              <Link
+                href={`/data-entry/${type}?mode=add`}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-800 transition hover:border-emerald-300 hover:bg-emerald-100"
+              >
+                <Plus className="h-4 w-4" />
+                Add new entries
+              </Link>
+            </div>
             <p className="mt-3 text-xs font-medium text-emerald-700">
               View dashboard → {PILLAR_ROUTES[type]}
             </p>
-          </Link>
+          </div>
         ))}
       </div>
 

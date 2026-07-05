@@ -58,3 +58,24 @@ export function editorToRows(
     .map((row) => editorToRow(row, columns))
     .filter((row) => Object.values(row).some((value) => value !== "" && value !== 0 && value !== null));
 }
+
+export function isEditorRowEmpty(
+  row: Record<string, string>,
+  columns: ReportColumn[],
+): boolean {
+  return columns.every((col) => (row[col.key]?.trim() ?? "") === "");
+}
+
+export function rowSignature(
+  row: Record<string, string>,
+  columns: ReportColumn[],
+): string {
+  return JSON.stringify(columns.map((col) => row[col.key] ?? ""));
+}
+
+export function baselineRowSignatures(
+  rows: Record<string, unknown>[],
+  columns: ReportColumn[],
+): Set<string> {
+  return new Set(rowsToEditor(rows, columns).map((row) => rowSignature(row, columns)));
+}

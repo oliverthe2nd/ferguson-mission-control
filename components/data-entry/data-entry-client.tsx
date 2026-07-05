@@ -1,13 +1,16 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import useSWR from "swr";
 import type { EditableReportType } from "@/lib/constants";
 import { REPORT_TYPE_LABELS } from "@/lib/constants";
-import { SpreadsheetEditor } from "./spreadsheet-editor";
+import { SpreadsheetEditor, type DataEntryMode } from "./spreadsheet-editor";
+import { cn } from "@/lib/utils";
 
 type DataEntryClientProps = {
   reportType: EditableReportType;
+  mode?: DataEntryMode;
 };
 
 type DataEntryResponse = {
@@ -27,7 +30,7 @@ const fetcher = (url: string) =>
     return body;
   });
 
-export function DataEntryClient({ reportType }: DataEntryClientProps) {
+export function DataEntryClient({ reportType, mode = "full" }: DataEntryClientProps) {
   const router = useRouter();
   const { data, error, isLoading, mutate } = useSWR<DataEntryResponse>(
     `/api/data-entry/${reportType}`,
@@ -66,24 +69,56 @@ export function DataEntryClient({ reportType }: DataEntryClientProps) {
   }
 
   const displayRows = data?.rows ?? [];
+  const basePath = `/data-entry/${reportType}`;
 
   return (
     <div className="space-y-4">
+      <div className="flex flex-wrap gap-2 rounded-lg border border-slate-200 bg-white p-1">
+        <Link
+          href={basePath}
+          className={cn(
+            "rounded-md px-4 py-2 text-sm font-medium transition",
+            mode === "full"
+              ? "bg-emerald-600 text-white"
+              : "text-slate-600 hover:bg-slate-50",
+          )}
+        >
+          Edit all rows
+        </Link>
+        <Link
+          href={`${basePath}?mode=add`}
+          className={cn(
+            "rounded-md px-4 py-2 text-sm font-medium transition",
+            mode === "append"
+              ? "bg-emerald-600 text-white"
+              : "text-slate-600 hover:bg-slate-50",
+          )}
+        >
+          Add new entries
+        </Link>
+      </div>
+
       <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
         <p className="font-medium text-slate-800">{REPORT_TYPE_LABELS[reportType]}</p>
-        {data?.lastUpload ? (
+        {mode === "append" ? (
+          <p className="mt-1">
+            Enter new rows below. They will be appended to the{" "}
+            {displayRows.length > 0 ? `${displayRows.length} existing` : "current"} live entries
+            after approval.
+          </p>
+        ) : data?.lastUpload ? (
           <p className="mt-1">
             Live data from <span className="font-medium">{data.lastUpload.fileName}</span>
           </p>
         ) : (
-          <p className="mt-1">No live upload yet — start from a blank sheet or add rows.</p>
+          <p className="mt-1">No live upload yet — add rows and submit for approval.</p>
         )}
       </div>
 
       {data?.pendingSubmission && (
         <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-          Submission pending since {new Date(data.pendingSubmission.submittedAt).toLocaleString("en-AU")}.
-          {" "}
+          Submission pending since{" "}
+          {new Date(data.pendingSubmission.submittedAt).toLocaleString("en-AU")}.{" "}
           <a href={`/approvals/${data.pendingSubmission.id}`} className="font-medium underline">
             View status
           </a>
@@ -91,8 +126,10 @@ export function DataEntryClient({ reportType }: DataEntryClientProps) {
       )}
 
       <SpreadsheetEditor
+        key={mode}
         reportType={reportType}
         initialRows={displayRows}
+        mode={mode}
         pendingSubmissionId={data?.pendingSubmission?.id}
         onSubmit={handleSubmit}
       />

@@ -57,8 +57,6 @@ function AtRiskCenterLabel({
   );
 }
 
-import { ENROLMENT_FEE_MILESTONES } from "@/lib/enrolment-fees";
-
 const MILESTONES = ENROLMENT_FEE_MILESTONES.map(({ key, label }) => ({ key, label }));
 
 function MilestoneFunnelChartInner({

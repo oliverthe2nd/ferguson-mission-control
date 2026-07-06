@@ -2,26 +2,20 @@ import { PageHeader } from "@/components/layout/app-shell";
 import {
   AtRiskTrendChart,
   AvgDaysPerStageChart,
+  EnrolmentMonthlyChart,
   MilestoneFunnelChart,
 } from "@/components/charts/enrolment-charts";
+import { EnrolmentStudentTable } from "@/components/enrolment/enrolment-student-table";
 import { ChartCard } from "@/components/dashboard/chart-card";
 import { SampleDataBoundary } from "@/components/dashboard/sample-data-overlay";
-import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
-import { getPillarData, isStudentAtRisk } from "@/lib/dashboard-data";
-import { formatOptionalDate } from "@/lib/format";
+import { isStudentAtRisk } from "@/lib/alerts";
+import { getResolvedPillarData } from "@/lib/framework/pillar-resolve";
 import type { EnrolmentMilestoneRow } from "@/lib/validators/enrolment-milestones";
 
 export default async function EnrolmentDashboardPage() {
-  const { rows, hasDatabase, usingSampleData, lastUploadLabel } =
-    await getPillarData<EnrolmentMilestoneRow>("enrolment_milestones");
-
-  const sortedRows = [...rows].sort((a, b) => {
-    const aRisk = isStudentAtRisk(a) ? 0 : 1;
-    const bRisk = isStudentAtRisk(b) ? 0 : 1;
-    if (aRisk !== bRisk) return aRisk - bRisk;
-    return a.student_name.localeCompare(b.student_name);
-  });
+  const { rows, hasDatabase, usingSampleData, lastUploadLabel, forcedSampleFallback } =
+    await getResolvedPillarData<EnrolmentMilestoneRow>("enrolment_milestones");
 
   const atRiskCount = rows.filter((row) => isStudentAtRisk(row)).length;
 
@@ -29,80 +23,48 @@ export default async function EnrolmentDashboardPage() {
     <>
       <PageHeader
         title="Enrolment & Finance"
-        description="Milestone tracker — consultation fees through to final payment"
+        description="Five fee milestones — consultation through final payment"
         lastUploadLabel={!usingSampleData ? lastUploadLabel : null}
       />
       {!hasDatabase && !usingSampleData && (
         <p className="mb-4 text-sm font-medium text-amber-700">Database not configured.</p>
       )}
-      {!usingSampleData && rows.length > 0 && (
-        <p className="mb-4 text-sm font-medium text-slate-600">
-          {rows.length} students in latest cohort.
+      {forcedSampleFallback && (
+        <p className="mb-4 text-sm font-medium text-amber-700">
+          Live data incomplete — showing sample enrolment data until Zoho fee dates are available.
         </p>
       )}
       <SampleDataBoundary
         active={usingSampleData}
         hint={
           <>
-            {rows.length} students, {atRiskCount} AT RISK — upload live reports at{" "}
-            <a href="/upload" className="font-bold underline">
-              /upload
-            </a>
+            {rows.length} students, {atRiskCount} AT RISK
           </>
         }
       >
-      {rows.length === 0 ? (
-        <EmptyState />
-      ) : (
-        <>
-          <div className="mb-6 grid gap-6 lg:grid-cols-3">
-            <ChartCard title="Milestone Funnel">
-              <MilestoneFunnelChart data={rows} />
-            </ChartCard>
-            <ChartCard title="AT RISK Overview">
-              <AtRiskTrendChart data={rows} />
-            </ChartCard>
-            <ChartCard title="Avg Days per Stage">
-              <AvgDaysPerStageChart data={rows} />
-            </ChartCard>
-          </div>
-
-          <ChartCard title="Student Milestones" fill>
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-left text-sm">
-                <thead className="border-b border-white/70 text-slate-600">
-                  <tr>
-                    <th className="px-3 py-2 font-bold">Student</th>
-                    <th className="px-3 py-2 font-bold">ID</th>
-                    <th className="px-3 py-2 font-bold">Registered</th>
-                    <th className="px-3 py-2 font-bold">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sortedRows.map((row) => (
-                    <tr key={row.student_id} className="border-b border-white/50">
-                      <td className="px-3 py-2 font-medium">{row.student_name}</td>
-                      <td className="px-3 py-2 font-mono text-xs text-slate-500">
-                        {row.student_id}
-                      </td>
-                      <td className="px-3 py-2">
-                        {formatOptionalDate(row.registration_date) ?? "—"}
-                      </td>
-                      <td className="px-3 py-2">
-                        {isStudentAtRisk(row) ? (
-                          <Badge status="red">AT RISK</Badge>
-                        ) : (
-                          <Badge status="green">On Track</Badge>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        {rows.length === 0 ? (
+          <EmptyState />
+        ) : (
+          <>
+            <div className="mb-6 grid gap-6 lg:grid-cols-2">
+              <ChartCard title="Monthly Enrolments" subtitle="Click a month to drill down">
+                <EnrolmentMonthlyChart data={rows} />
+              </ChartCard>
+              <ChartCard title="Milestone Funnel">
+                <MilestoneFunnelChart data={rows} />
+              </ChartCard>
+              <ChartCard title="AT RISK Overview">
+                <AtRiskTrendChart data={rows} />
+              </ChartCard>
+              <ChartCard title="Avg Days per Fee Stage">
+                <AvgDaysPerStageChart data={rows} />
+              </ChartCard>
             </div>
-          </ChartCard>
-        </>
-      )}
+            <ChartCard title="Student Milestones" fill>
+              <EnrolmentStudentTable rows={rows} />
+            </ChartCard>
+          </>
+        )}
       </SampleDataBoundary>
     </>
   );

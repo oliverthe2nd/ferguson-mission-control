@@ -1,14 +1,20 @@
 "use client";
 
 import { Bar, BarChart, Cell, Label, LabelList, Legend, Pie, PieChart, ReferenceLine } from "recharts";
+import { useState } from "react";
 import { ChartErrorBoundary } from "@/components/ui/chart-error-boundary";
 import { ChartSkeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { isStudentAtRisk } from "@/lib/alerts";
 import { getMilestoneActual, getMilestoneTarget } from "@/lib/enrolment-dates";
+import { ENROLMENT_FEE_MILESTONES } from "@/lib/enrolment-fees";
 import { CHART_COLORS } from "@/lib/constants";
+import { sampleEnrolmentMonthDrilldown } from "@/lib/framework/sample-supplements";
+import { formatMonthYear, monthKey } from "@/lib/format";
 import type { EnrolmentMilestoneRow } from "@/lib/validators/enrolment-milestones";
+import { ChartDrilldownPanel } from "./chart-drilldown-panel";
 import {
+  BAR_RADIUS,
   BAR_RADIUS_H,
   CHART_MARGIN,
   ChartFrame,
@@ -51,13 +57,9 @@ function AtRiskCenterLabel({
   );
 }
 
-const MILESTONES = [
-  { key: "m1", label: "M1 Consultation" },
-  { key: "m2", label: "M2 Tuition" },
-  { key: "m3", label: "M3 Visa Lodge" },
-  { key: "m4", label: "M4 OSHC" },
-  { key: "m5", label: "M5 Final Consult" },
-] as const;
+import { ENROLMENT_FEE_MILESTONES } from "@/lib/enrolment-fees";
+
+const MILESTONES = ENROLMENT_FEE_MILESTONES.map(({ key, label }) => ({ key, label }));
 
 function MilestoneFunnelChartInner({
   data,
@@ -283,4 +285,68 @@ export function AtRiskTrendChart(props: { data: EnrolmentMilestoneRow[]; loading
 
 export function AvgDaysPerStageChart(props: { data: EnrolmentMilestoneRow[]; loading?: boolean }) {
   return <ChartErrorBoundary><AvgDaysPerStageChartInner {...props} /></ChartErrorBoundary>;
+}
+
+function EnrolmentMonthlyChartInner({
+  data,
+  loading,
+}: {
+  data: EnrolmentMilestoneRow[];
+  loading?: boolean;
+}) {
+  const [month, setMonth] = useState<string | null>(null);
+
+  if (loading) return <ChartSkeleton />;
+  if (data.length === 0) return <EmptyState />;
+
+  const byMonth = new Map<string, number>();
+  for (const row of data) {
+    if (!row.registration_date) continue;
+    const key = monthKey(row.registration_date);
+    byMonth.set(key, (byMonth.get(key) ?? 0) + 1);
+  }
+
+  const chartData = [...byMonth.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([key, count]) => ({
+      monthKey: key,
+      month: formatMonthYear(new Date(`${key}-01`)),
+      count,
+    }));
+
+  return (
+    <>
+      <ChartFrame>
+        <BarChart data={chartData} margin={CHART_MARGIN}>
+          <ChartGrid />
+          <ChartXAxis dataKey="month" />
+          <ChartYAxis allowDecimals={false} />
+          <ChartTooltip />
+          <Bar
+            dataKey="count"
+            name="Registrations"
+            fill={CHART_COLORS.primary}
+            radius={BAR_RADIUS}
+            className="cursor-pointer"
+            onClick={(barData) => {
+              const payload = barData as { month?: string };
+              if (payload.month) setMonth(payload.month);
+            }}
+          />
+        </BarChart>
+      </ChartFrame>
+      {month && (
+        <ChartDrilldownPanel
+          title="Enrolments"
+          subtitle={month}
+          records={sampleEnrolmentMonthDrilldown(month)}
+          onClose={() => setMonth(null)}
+        />
+      )}
+    </>
+  );
+}
+
+export function EnrolmentMonthlyChart(props: { data: EnrolmentMilestoneRow[]; loading?: boolean }) {
+  return <ChartErrorBoundary><EnrolmentMonthlyChartInner {...props} /></ChartErrorBoundary>;
 }

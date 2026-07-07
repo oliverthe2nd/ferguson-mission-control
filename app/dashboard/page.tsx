@@ -1,6 +1,6 @@
-import { PageHeader } from "@/components/layout/app-shell";
 import { AlertTray } from "@/components/dashboard/alert-tray";
 import { DashboardCard } from "@/components/dashboard/dashboard-card";
+import { DashboardReportSection } from "@/components/dashboard/dashboard-report-section";
 import { DemoBanner } from "@/components/dashboard/demo-banner";
 import { SampleDataBoundary } from "@/components/dashboard/sample-data-overlay";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -14,16 +14,14 @@ export default async function DashboardPage() {
   ]);
 
   return (
-    <>
-      <PageHeader
-        title="Mission Control"
-        description="Single Source of Truth — all six reporting pillars at a glance"
-      />
-
+    <DashboardReportSection
+      title="Mission Control"
+      description="Single Source of Truth — all six reporting pillars at a glance"
+    >
       {isDemoMode() && <DemoBanner />}
 
       {overview.usingSampleData ? null : !overview.hasDatabase ? (
-        <div className="liquid-glass mb-6 rounded-[1.25rem] border border-amber-200/70 bg-amber-50/80 p-4 text-sm text-amber-900 shadow-[0_12px_40px_rgba(246,162,11,0.08)] backdrop-blur-xl">
+        <div className="liquid-glass rounded-[1.25rem] border border-amber-200/70 bg-amber-50/80 p-4 text-sm text-amber-900 shadow-[0_12px_40px_rgba(246,162,11,0.08)] backdrop-blur-xl">
           Database not configured. Add your <code className="font-mono">DATABASE_URL</code> to{" "}
           <code className="font-mono">.env.local</code> and run{" "}
           <code className="font-mono">npm run db:push</code>.
@@ -53,6 +51,6 @@ export default async function DashboardPage() {
           </div>
         )}
       </SampleDataBoundary>
-    </>
+    </DashboardReportSection>
   );
 }

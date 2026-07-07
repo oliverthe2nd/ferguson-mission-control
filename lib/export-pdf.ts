@@ -3,7 +3,8 @@ function slugFilename(title: string): string {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
-  return slug ? `${slug}.pdf` : "report.pdf";
+  const date = new Date().toISOString().slice(0, 10);
+  return slug ? `${slug}-${date}.pdf` : `report-${date}.pdf`;
 }
 
 export async function exportElementToPdf(

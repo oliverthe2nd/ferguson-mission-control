@@ -1,10 +1,10 @@
-import { PageHeader } from "@/components/layout/app-shell";
 import {
   IncentivesVsPlacementsChart,
   PlacementFunnelChart,
   TestimonialBreakdownChart,
 } from "@/components/charts/placement-charts";
 import { ChartCard } from "@/components/dashboard/chart-card";
+import { DashboardReportSection } from "@/components/dashboard/dashboard-report-section";
 import { SampleDataBoundary } from "@/components/dashboard/sample-data-overlay";
 import { EmptyState } from "@/components/ui/empty-state";
 import { getResolvedPillarData } from "@/lib/framework/pillar-resolve";
@@ -15,14 +15,13 @@ export default async function PlacementDashboardPage() {
     await getResolvedPillarData<JobPlacementRow>("job_placement");
 
   return (
-    <>
-      <PageHeader
-        title="Job Placement & Settlement"
-        description="Monthly placement funnel, testimonials, and incentive tracking"
-        lastUploadLabel={!usingSampleData ? lastUploadLabel : null}
-      />
+    <DashboardReportSection
+      title="Job Placement & Settlement"
+      description="Monthly placement funnel, testimonials, and incentive tracking"
+      lastUploadLabel={!usingSampleData ? lastUploadLabel : null}
+    >
       {!hasDatabase && !usingSampleData && (
-        <p className="mb-4 text-sm font-medium text-amber-700">Database not configured.</p>
+        <p className="text-sm font-medium text-amber-700">Database not configured.</p>
       )}
       <SampleDataBoundary
         active={usingSampleData}
@@ -35,22 +34,22 @@ export default async function PlacementDashboardPage() {
           </>
         }
       >
-      {rows.length === 0 ? (
-        <EmptyState />
-      ) : (
-        <div className="grid gap-6 lg:grid-cols-2">
-          <ChartCard title="Placement Funnel">
-            <PlacementFunnelChart data={rows} />
-          </ChartCard>
-          <ChartCard title="Testimonial Breakdown">
-            <TestimonialBreakdownChart data={rows} />
-          </ChartCard>
-          <ChartCard title="Incentives vs Placements" className="lg:col-span-2">
-            <IncentivesVsPlacementsChart data={rows} />
-          </ChartCard>
-        </div>
-      )}
+        {rows.length === 0 ? (
+          <EmptyState />
+        ) : (
+          <div className="grid gap-6 lg:grid-cols-2">
+            <ChartCard title="Placement Funnel">
+              <PlacementFunnelChart data={rows} />
+            </ChartCard>
+            <ChartCard title="Testimonial Breakdown">
+              <TestimonialBreakdownChart data={rows} />
+            </ChartCard>
+            <ChartCard title="Incentives vs Placements" className="lg:col-span-2">
+              <IncentivesVsPlacementsChart data={rows} />
+            </ChartCard>
+          </div>
+        )}
       </SampleDataBoundary>
-    </>
+    </DashboardReportSection>
   );
 }

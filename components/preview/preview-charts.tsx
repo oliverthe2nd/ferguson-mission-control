@@ -44,7 +44,8 @@ import {
   TurnaroundBucketChart,
   VisaPipelineStatusGrid,
 } from "@/components/charts/visa-pipeline-charts";
-import { ChartCard, Section } from "@/components/dashboard/chart-card";
+import { ChartCard } from "@/components/dashboard/chart-card";
+import { Section } from "@/components/dashboard/preview-section";
 import {
   sampleStudyCentreAvgDays,
   sampleStudyCentrePipeline,

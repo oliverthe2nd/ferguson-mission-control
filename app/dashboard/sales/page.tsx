@@ -1,4 +1,3 @@
-import { PageHeader } from "@/components/layout/app-shell";
 import {
   LeadConversionChart,
   LeadSourceBarChart,
@@ -6,6 +5,7 @@ import {
   TotalLeadsChart,
 } from "@/components/charts/sales-pipeline-charts";
 import { ChartCard } from "@/components/dashboard/chart-card";
+import { DashboardReportSection } from "@/components/dashboard/dashboard-report-section";
 import { SampleDataBoundary } from "@/components/dashboard/sample-data-overlay";
 import { EmptyState } from "@/components/ui/empty-state";
 import { getResolvedPillarData } from "@/lib/framework/pillar-resolve";
@@ -16,17 +16,16 @@ export default async function SalesDashboardPage() {
     await getResolvedPillarData<SalesPipelineRow>("sales_pipeline");
 
   return (
-    <>
-      <PageHeader
-        title="Sales & Marketing"
-        description="Pipeline conversion — lead source and registration tracking"
-        lastUploadLabel={!usingSampleData ? lastUploadLabel : null}
-      />
+    <DashboardReportSection
+      title="Sales & Marketing"
+      description="Pipeline conversion — lead source and registration tracking"
+      lastUploadLabel={!usingSampleData ? lastUploadLabel : null}
+    >
       {!hasDatabase && !usingSampleData && (
-        <p className="mb-4 text-sm font-medium text-amber-700">Database not configured.</p>
+        <p className="text-sm font-medium text-amber-700">Database not configured.</p>
       )}
       {forcedSampleFallback && (
-        <p className="mb-4 text-sm font-medium text-amber-700">
+        <p className="text-sm font-medium text-amber-700">
           Live data incomplete for new charts — showing sample data until Zoho fields are wired.
         </p>
       )}
@@ -60,6 +59,6 @@ export default async function SalesDashboardPage() {
           </div>
         )}
       </SampleDataBoundary>
-    </>
+    </DashboardReportSection>
   );
 }

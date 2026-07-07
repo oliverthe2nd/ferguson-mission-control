@@ -67,8 +67,8 @@ export function PdfExportButton({ getTarget, title, className }: PdfExportButton
       type="button"
       onClick={() => void handleExport()}
       disabled={exporting}
-      title="Export PDF"
-      aria-label={`Export ${title} as PDF`}
+      title="Export report"
+      aria-label={`Export ${title} report as PDF`}
       className={cn(
         "rounded-full border border-white/80 bg-white/50 p-2 text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_8px_20px_rgba(31,42,61,0.08)] backdrop-blur-xl ring-1 ring-slate-200/60 transition hover:border-red-200/80 hover:bg-white/80 hover:text-red-600 disabled:cursor-wait disabled:opacity-60",
         className,

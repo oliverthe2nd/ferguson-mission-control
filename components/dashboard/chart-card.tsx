@@ -1,9 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useCallback, useRef } from "react";
 import { cn } from "@/lib/utils";
-import { PdfExportButton } from "./pdf-export-button";
 
 interface ChartCardProps {
   title: string;
@@ -13,8 +11,6 @@ interface ChartCardProps {
   tall?: boolean;
   /** Use for tables or content that should not be fixed to chart height */
   fill?: boolean;
-  /** Disable PDF export for this card */
-  disableExport?: boolean;
 }
 
 export function ChartCard({
@@ -24,14 +20,9 @@ export function ChartCard({
   className,
   tall = false,
   fill = false,
-  disableExport = false,
 }: ChartCardProps) {
-  const sectionRef = useRef<HTMLElement>(null);
-  const getExportTarget = useCallback(() => sectionRef.current, []);
-
   return (
     <section
-      ref={sectionRef}
       className={cn(
         "liquid-glass group relative overflow-hidden rounded-[1.65rem] border border-white/70 bg-white/55 p-5 shadow-[0_20px_60px_rgba(31,42,61,0.10),inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-2xl transition duration-300 hover:-translate-y-1 hover:border-emerald-200/80 hover:bg-white/70 hover:shadow-[0_30px_80px_rgba(31,42,61,0.14),inset_0_1px_0_rgba(255,255,255,1)]",
         className,
@@ -40,17 +31,12 @@ export function ChartCard({
       <div className="pointer-events-none absolute -right-16 -top-20 h-48 w-48 rounded-full bg-emerald-300/20 blur-3xl transition duration-500 group-hover:bg-emerald-300/30" />
       <div className="pointer-events-none absolute -bottom-24 left-10 h-44 w-44 rounded-full bg-orange-200/20 blur-3xl" />
       <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-white/95" />
-      <div className="relative mb-4 flex items-start justify-between gap-3">
-        <div className="min-w-0 pr-2">
-          <h2 className="text-base font-extrabold tracking-tight text-slate-900">
-            {title}
-          </h2>
-          {subtitle && (
-            <p className="mt-1 text-sm font-medium text-slate-500">{subtitle}</p>
-          )}
-        </div>
-        {!disableExport && (
-          <PdfExportButton getTarget={getExportTarget} title={title} />
+      <div className="relative mb-4">
+        <h2 className="text-base font-extrabold tracking-tight text-slate-900">
+          {title}
+        </h2>
+        {subtitle && (
+          <p className="mt-1 text-sm font-medium text-slate-500">{subtitle}</p>
         )}
       </div>
       <div
@@ -62,23 +48,6 @@ export function ChartCard({
       >
         {children}
       </div>
-    </section>
-  );
-}
-
-export function Section({
-  title,
-  children,
-}: {
-  title: string;
-  children: ReactNode;
-}) {
-  return (
-    <section className="space-y-4">
-      <h2 className="text-xl font-black tracking-tight text-slate-950 sm:text-2xl">
-        {title}
-      </h2>
-      {children}
     </section>
   );
 }

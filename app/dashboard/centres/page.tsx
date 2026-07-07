@@ -1,4 +1,3 @@
-import { PageHeader } from "@/components/layout/app-shell";
 import {
   ActiveStudentsTrendChart,
   AustraliaPipelineChart,
@@ -11,6 +10,7 @@ import {
   WalkInTrafficChart,
 } from "@/components/charts/study-centre-extended-charts";
 import { ChartCard } from "@/components/dashboard/chart-card";
+import { DashboardReportSection } from "@/components/dashboard/dashboard-report-section";
 import { SampleDataBoundary } from "@/components/dashboard/sample-data-overlay";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
@@ -27,17 +27,16 @@ export default async function CentresDashboardPage() {
   const { rows: avgDays } = resolveStudyCentreAvgDays(usingSampleData);
 
   return (
-    <>
-      <PageHeader
-        title="Offshore Study Centres"
-        description="Lautoka, Port Moresby, and Lae — walk-ins, pipeline, and Australia progression"
-        lastUploadLabel={!usingSampleData ? lastUploadLabel : null}
-      />
+    <DashboardReportSection
+      title="Offshore Study Centres"
+      description="Lautoka, Port Moresby, and Lae — walk-ins, pipeline, and Australia progression"
+      lastUploadLabel={!usingSampleData ? lastUploadLabel : null}
+    >
       {!hasDatabase && !usingSampleData && (
-        <p className="mb-4 text-sm font-medium text-amber-700">Database not configured.</p>
+        <p className="text-sm font-medium text-amber-700">Database not configured.</p>
       )}
       {forcedSampleFallback && (
-        <p className="mb-4 text-sm font-medium text-amber-700">
+        <p className="text-sm font-medium text-amber-700">
           Live study centre data incomplete — showing sample until walk-in traffic is uploaded.
         </p>
       )}
@@ -70,6 +69,6 @@ export default async function CentresDashboardPage() {
           </div>
         )}
       </SampleDataBoundary>
-    </>
+    </DashboardReportSection>
   );
 }

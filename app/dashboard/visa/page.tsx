@@ -1,4 +1,3 @@
-import { PageHeader } from "@/components/layout/app-shell";
 import {
   LodgementTrendChart,
   PendingActionsChart,
@@ -11,6 +10,7 @@ import {
   VisaPipelineStatusGrid,
 } from "@/components/charts/visa-pipeline-charts";
 import { ChartCard } from "@/components/dashboard/chart-card";
+import { DashboardReportSection } from "@/components/dashboard/dashboard-report-section";
 import { SampleDataBoundary } from "@/components/dashboard/sample-data-overlay";
 import { EmptyState } from "@/components/ui/empty-state";
 import { getVisaAlerts } from "@/lib/alerts";
@@ -24,23 +24,22 @@ export default async function VisaDashboardPage() {
   const { status: pipelineStatus } = resolveVisaPipelineStatus(rows, usingSampleData);
 
   return (
-    <>
-      <PageHeader
-        title="Visa Team"
-        description="Lodgement pipeline — turnaround and pending actions"
-        lastUploadLabel={!usingSampleData ? lastUploadLabel : null}
-      />
+    <DashboardReportSection
+      title="Visa Team"
+      description="Lodgement pipeline — turnaround and pending actions"
+      lastUploadLabel={!usingSampleData ? lastUploadLabel : null}
+    >
       {!hasDatabase && !usingSampleData && (
-        <p className="mb-4 text-sm font-medium text-amber-700">Database not configured.</p>
+        <p className="text-sm font-medium text-amber-700">Database not configured.</p>
       )}
       {forcedSampleFallback && (
-        <p className="mb-4 text-sm font-medium text-amber-700">
+        <p className="text-sm font-medium text-amber-700">
           Live visa data missing pipeline fields — showing sample until Rose consolidates pending-action data.
         </p>
       )}
       <SampleDataBoundary active={usingSampleData} hint="Upload or data entry at /data-entry">
         {alerts.hasRefusals && (
-          <div className="liquid-glass mb-6 rounded-[1.25rem] border border-orange-200/70 bg-orange-50/80 p-4 text-sm font-bold text-f-orange">
+          <div className="liquid-glass rounded-[1.25rem] border border-orange-200/70 bg-orange-50/80 p-4 text-sm font-bold text-f-orange">
             Requires immediate management review — visa refusals detected.
           </div>
         )}
@@ -74,6 +73,6 @@ export default async function VisaDashboardPage() {
           </div>
         )}
       </SampleDataBoundary>
-    </>
+    </DashboardReportSection>
   );
 }

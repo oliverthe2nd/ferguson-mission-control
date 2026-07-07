@@ -3,8 +3,23 @@
 import * as XLSX from "xlsx";
 import type { ReportType } from "./constants";
 import { ALLOWED_UPLOAD_EXTENSIONS, MAX_UPLOAD_BYTES } from "./constants";
+import {
+  isMyobUnpaidInvoicesSheet,
+  parseMyobUnpaidInvoicesRows,
+} from "./parsers/myob-unpaid-invoices";
 
-export function parseSpreadsheetFile(file: File): Promise<Record<string, unknown>[]> {
+function serializeRow(row: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(row)) {
+    out[key] = value instanceof Date ? value.toISOString().slice(0, 10) : value;
+  }
+  return out;
+}
+
+export function parseSpreadsheetFile(
+  file: File,
+  reportType?: ReportType,
+): Promise<Record<string, unknown>[]> {
   return new Promise((resolve, reject) => {
     const extension = file.name
       .slice(file.name.lastIndexOf("."))
@@ -31,6 +46,21 @@ export function parseSpreadsheetFile(file: File): Promise<Record<string, unknown
         const workbook = XLSX.read(data, { type: "array", cellDates: true });
         const sheetName = workbook.SheetNames[0];
         const sheet = workbook.Sheets[sheetName];
+
+        if (reportType === "accounts_receivable") {
+          const matrix = XLSX.utils.sheet_to_json<unknown[]>(sheet, {
+            header: 1,
+            defval: "",
+          });
+          if (isMyobUnpaidInvoicesSheet(matrix)) {
+            const parsed = parseMyobUnpaidInvoicesRows(matrix).map((row) =>
+              serializeRow(row as unknown as Record<string, unknown>),
+            );
+            resolve(parsed);
+            return;
+          }
+        }
+
         const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, {
           defval: null,
         });

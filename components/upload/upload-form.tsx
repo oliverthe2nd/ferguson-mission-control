@@ -19,7 +19,7 @@ export function UploadForm() {
     setError("");
     setSuccess(false);
     try {
-      const parsed = await parseSpreadsheetFile(file);
+      const parsed = await parseSpreadsheetFile(file, reportType);
       setFileName(file.name);
       setRows(parsed);
     } catch (err) {
@@ -79,6 +79,12 @@ export function UploadForm() {
         <p className="text-sm text-slate-600">
           Drag and drop a .xlsx or .csv file here, or
         </p>
+        {reportType === "accounts_receivable" && (
+          <p className="mt-2 text-xs text-slate-500">
+            MYOB <strong>Unpaid invoices report</strong> (.xlsx) is supported — ageing
+            buckets are expanded automatically for the dashboard.
+          </p>
+        )}
         <label className="mt-3 inline-block cursor-pointer rounded-lg bg-emerald px-4 py-2 text-sm font-medium text-white hover:bg-emerald/90">
           Browse files
           <input

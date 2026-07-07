@@ -16,7 +16,8 @@ export function TemplateDownloads() {
       <h2 className="text-sm font-semibold text-dark">Sample templates</h2>
       <p className="mt-1 text-sm text-slate-600">
         Download a CSV template for each pillar, fill in your data, then upload
-        above. Templates include example rows that trigger KPI alerts.
+        above. For Accounts, you can also upload a MYOB{" "}
+        <strong>Unpaid invoices report</strong> (.xlsx) export directly.
       </p>
       <ul className="mt-4 grid gap-2 sm:grid-cols-2">
         {REPORT_TYPES.map((type) => (

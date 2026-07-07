@@ -10,6 +10,7 @@
     "db:push": "node --env-file=.env.local ./node_modules/drizzle-kit/bin.cjs push",
     "db:studio": "node --env-file=.env.local ./node_modules/drizzle-kit/bin.cjs studio",
     "seed:uploads": "npx tsx --env-file=.env.local scripts/seed-uploads.ts",
+    "import:myob-accounts": "npx tsx --env-file=.env.local scripts/import-myob-accounts.ts",
     "sync:zoho:sales": "npx tsx --env-file=.env.local scripts/sync-zoho-sales.ts",
     "check:zoho": "npx tsx --env-file=.env.local scripts/check-zoho-permissions.ts"
   },

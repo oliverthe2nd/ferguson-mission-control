@@ -1,6 +1,6 @@
 "use client";
 
-import { Area, AreaChart, Bar, BarChart, Cell } from "recharts";
+import { Area, AreaChart, Bar, BarChart, Cell, Tooltip } from "recharts";
 import { ChartErrorBoundary } from "@/components/ui/chart-error-boundary";
 import { ChartSkeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -16,6 +16,7 @@ import {
   ChartFrame,
   ChartGrid,
   ChartTooltip,
+  ChartTooltipContent,
   ChartXAxis,
   ChartYAxis,
 } from "./chart-theme";
@@ -26,6 +27,26 @@ const BUCKET_COLORS: Record<string, string> = {
   Urgent: CHART_COLORS.alert,
   "Legal Demand": CHART_COLORS.dark,
 };
+
+/** Single-line school label for chart axes — full name stays in tooltip. */
+function shortenSchoolName(name: string, maxLength = 28): string {
+  const acronym = name.match(/\(([A-Z]{2,8})\)\s*$/);
+  let short = name
+    .replace(/\s*\([^)]*(?:Pty|Ltd|Limited|Education|Management)[^)]*\)/gi, " ")
+    .replace(/\s+Pty\s+Ltd\.?$/i, "")
+    .replace(/\s+Pty\s+Limited$/i, "")
+    .replace(/\s+Limited$/i, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+
+  if (short.length > maxLength && acronym) {
+    return acronym[1];
+  }
+  if (short.length > maxLength) {
+    return `${short.slice(0, maxLength - 1)}…`;
+  }
+  return short;
+}
 
 function ArBucketChartInner({ data, loading }: { data: AccountsReceivableRow[]; loading?: boolean }) {
   if (loading) return <ChartSkeleton />;
@@ -93,17 +114,45 @@ function SchoolOutstandingChartInner({ data, loading }: { data: AccountsReceivab
   }, {});
 
   const chartData = Object.entries(bySchool)
-    .map(([school, amount]) => ({ school, amount }))
+    .map(([school, amount]) => ({
+      school,
+      schoolShort: shortenSchoolName(school),
+      amount,
+    }))
     .sort((a, b) => b.amount - a.amount)
     .slice(0, 10);
 
   return (
     <ChartFrame>
-      <BarChart data={chartData} layout="vertical" margin={{ ...CHART_MARGIN, left: 8 }}>
+      <BarChart
+        data={chartData}
+        layout="vertical"
+        margin={{ ...CHART_MARGIN, left: 4, right: 16 }}
+      >
         <ChartGrid vertical />
         <ChartXAxis type="number" tickFormatter={(v) => formatAud(v)} />
-        <ChartYAxis type="category" dataKey="school" width={132} tick={{ fontSize: 11 }} />
-        <ChartTooltip valueFormatter={(v) => formatAud(v)} />
+        <ChartYAxis
+          type="category"
+          dataKey="schoolShort"
+          width={156}
+          tick={{ fontSize: 11 }}
+          interval={0}
+        />
+        <Tooltip
+          cursor={{ fill: "rgba(32, 201, 151, 0.06)" }}
+          content={({ active, payload }) => {
+            if (!active || !payload?.[0]) return null;
+            const row = payload[0].payload as { school: string };
+            return (
+              <ChartTooltipContent
+                active
+                label={row.school}
+                payload={payload}
+                valueFormatter={(v) => formatAud(v)}
+              />
+            );
+          }}
+        />
         <Bar dataKey="amount" name="Outstanding" fill={CHART_COLORS.dark} radius={BAR_RADIUS_H} />
       </BarChart>
     </ChartFrame>

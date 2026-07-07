@@ -29,9 +29,11 @@ const BUCKET_COLORS: Record<string, string> = {
 };
 
 /** Single-line school label for chart axes — full name stays in tooltip. */
-function shortenSchoolName(name: string, maxLength = 28): string {
+function shortenSchoolName(name: string, maxLength = 22): string {
+  const tradingAs = name.match(/\(T\/A\s+([^)]+)\)\s*$/i);
   const acronym = name.match(/\(([A-Z]{2,8})\)\s*$/);
   let short = name
+    .replace(/\s*\(T\/A\s+[^)]+\)\s*$/i, "")
     .replace(/\s*\([^)]*(?:Pty|Ltd|Limited|Education|Management)[^)]*\)/gi, " ")
     .replace(/\s+Pty\s+Ltd\.?$/i, "")
     .replace(/\s+Pty\s+Limited$/i, "")
@@ -39,6 +41,10 @@ function shortenSchoolName(name: string, maxLength = 28): string {
     .replace(/\s{2,}/g, " ")
     .trim();
 
+  if (tradingAs) {
+    const label = tradingAs[1].trim();
+    if (label.length <= maxLength) return label;
+  }
   if (short.length > maxLength && acronym) {
     return acronym[1];
   }
@@ -46,6 +52,29 @@ function shortenSchoolName(name: string, maxLength = 28): string {
     return `${short.slice(0, maxLength - 1)}…`;
   }
   return short;
+}
+
+function SchoolAxisTick(props: {
+  x?: string | number;
+  y?: string | number;
+  payload?: { value?: string };
+}) {
+  const x = typeof props.x === "number" ? props.x : Number(props.x ?? 0);
+  const y = typeof props.y === "number" ? props.y : Number(props.y ?? 0);
+
+  return (
+    <text
+      x={x}
+      y={y}
+      dy={4}
+      textAnchor="end"
+      fill={CHART_COLORS.muted}
+      fontSize={11}
+      fontWeight={600}
+    >
+      {props.payload?.value ?? ""}
+    </text>
+  );
 }
 
 function ArBucketChartInner({ data, loading }: { data: AccountsReceivableRow[]; loading?: boolean }) {
@@ -122,22 +151,26 @@ function SchoolOutstandingChartInner({ data, loading }: { data: AccountsReceivab
     .sort((a, b) => b.amount - a.amount)
     .slice(0, 10);
 
+  const chartHeight = Math.max(360, chartData.length * 40);
+
   return (
-    <ChartFrame>
-      <BarChart
-        data={chartData}
-        layout="vertical"
-        margin={{ ...CHART_MARGIN, left: 4, right: 16 }}
-      >
-        <ChartGrid vertical />
-        <ChartXAxis type="number" tickFormatter={(v) => formatAud(v)} />
-        <ChartYAxis
-          type="category"
-          dataKey="schoolShort"
-          width={156}
-          tick={{ fontSize: 11 }}
-          interval={0}
-        />
+    <div style={{ height: chartHeight }}>
+      <ChartFrame>
+        <BarChart
+          data={chartData}
+          layout="vertical"
+          margin={{ top: 8, right: 20, left: 8, bottom: 8 }}
+          barCategoryGap="18%"
+        >
+          <ChartGrid vertical />
+          <ChartXAxis type="number" tickFormatter={(v) => formatAud(v)} />
+          <ChartYAxis
+            type="category"
+            dataKey="schoolShort"
+            width={172}
+            interval={0}
+            tick={SchoolAxisTick}
+          />
         <Tooltip
           cursor={{ fill: "rgba(32, 201, 151, 0.06)" }}
           content={({ active, payload }) => {
@@ -147,7 +180,7 @@ function SchoolOutstandingChartInner({ data, loading }: { data: AccountsReceivab
               <ChartTooltipContent
                 active
                 label={row.school}
-                payload={payload}
+                payload={payload as Parameters<typeof ChartTooltipContent>[0]["payload"]}
                 valueFormatter={(v) => formatAud(v)}
               />
             );
@@ -156,6 +189,7 @@ function SchoolOutstandingChartInner({ data, loading }: { data: AccountsReceivab
         <Bar dataKey="amount" name="Outstanding" fill={CHART_COLORS.dark} radius={BAR_RADIUS_H} />
       </BarChart>
     </ChartFrame>
+    </div>
   );
 }
 

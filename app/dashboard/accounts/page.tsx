@@ -8,12 +8,14 @@ import { ChartCard } from "@/components/dashboard/chart-card";
 import { SampleDataBoundary } from "@/components/dashboard/sample-data-overlay";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
-import { getArStatus, getPillarData } from "@/lib/dashboard-data";
+import { getArStatus } from "@/lib/dashboard-data";
+import { getResolvedPillarData } from "@/lib/framework/pillar-resolve";
 import { formatAud } from "@/lib/format";
 import type { AccountsReceivableRow } from "@/lib/validators/accounts-receivable";
 
 export default async function AccountsDashboardPage() {
-  const { rows, hasDatabase, usingSampleData, lastUploadLabel } = await getPillarData<AccountsReceivableRow>("accounts_receivable");
+  const { rows, hasDatabase, usingSampleData, lastUploadLabel } =
+    await getResolvedPillarData<AccountsReceivableRow>("accounts_receivable");
 
   return (
     <>
@@ -40,14 +42,14 @@ export default async function AccountsDashboardPage() {
         <EmptyState />
       ) : (
         <>
-          <div className="mb-6 grid gap-6 lg:grid-cols-3">
+          <div className="mb-6 grid gap-6 lg:grid-cols-2">
             <ChartCard title="AR by Delinquency Bucket">
               <ArBucketChart data={rows} />
             </ChartCard>
             <ChartCard title="Total Receivables">
               <ReceivablesTrendChart data={rows} />
             </ChartCard>
-            <ChartCard title="Per-School Outstanding">
+            <ChartCard title="Per-School Outstanding" className="lg:col-span-2" fill>
               <SchoolOutstandingChart data={rows} />
             </ChartCard>
           </div>

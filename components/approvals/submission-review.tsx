@@ -10,6 +10,7 @@ import {
 } from "@/lib/constants";
 import { REPORT_COLUMNS } from "@/lib/report-columns";
 import { rowToEditor } from "@/lib/row-format";
+import { formatDateTime } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 
 type SubmissionDetail = {
@@ -21,6 +22,9 @@ type SubmissionDetail = {
   rows: Record<string, unknown>[];
   baseline_rows: Record<string, unknown>[] | null;
   review_comment: string | null;
+  reviewed_by: string | null;
+  reviewed_by_email: string | null;
+  reviewed_at: string | null;
 };
 
 const fetcher = (url: string) =>
@@ -100,6 +104,13 @@ export function SubmissionReview({
           Submitted by {data.submitted_by} ({data.submitted_by_email})
         </p>
         <p className="capitalize text-slate-500">Status: {data.status}</p>
+        {data.reviewed_at && (
+          <p className="mt-1 text-slate-600">
+            {data.status === "approved" ? "Approved" : "Rejected"} by{" "}
+            {data.reviewed_by ?? data.reviewed_by_email} on{" "}
+            {formatDateTime(data.reviewed_at)}
+          </p>
+        )}
         {data.review_comment && (
           <p className="mt-2 text-slate-600">Comment: {data.review_comment}</p>
         )}

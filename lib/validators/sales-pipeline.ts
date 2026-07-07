@@ -5,6 +5,7 @@ export const salesPipelineRowSchema = z.object({
   leads_facebook: z.coerce.number(),
   leads_website: z.coerce.number(),
   leads_walkin: z.coerce.number(),
+  leads_seminar: z.coerce.number().optional().default(0),
   leads_other: z.coerce.number(),
   total_registrations: z.coerce.number(),
   lead_to_reg_pct: z.coerce.number(),

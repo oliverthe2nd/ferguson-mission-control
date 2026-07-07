@@ -58,6 +58,15 @@ export function canApproveSubmissions(user: SessionUser): boolean {
   return user.role === "admin" || user.isApprover;
 }
 
+/** Staff with editor role only — data entry screen, no dashboard access. */
+export function isEntryStaffOnly(user: SessionUser): boolean {
+  return user.role === "editor" && !user.isApprover;
+}
+
+export function canViewDashboards(user: SessionUser): boolean {
+  return !isEntryStaffOnly(user);
+}
+
 export async function requireAdmin(): Promise<SessionUser | null> {
   const user = await getSessionUser();
   if (!user) return null;

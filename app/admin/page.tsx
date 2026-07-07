@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/layout/app-shell";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { requireAdmin } from "@/lib/auth";
 import { isZohoConfigured } from "@/lib/zoho/config";
+import { DATA_REQUIREMENTS } from "@/lib/framework/data-requirements";
 import { formatDate } from "@/lib/format";
 import { getUploadHistory } from "@/lib/queries";
 import { REPORT_TYPE_LABELS, type ReportType } from "@/lib/constants";
@@ -105,7 +106,7 @@ export default async function AdminPage() {
             <code className="font-mono text-xs">admin</code> — bulk CSV upload, Zoho sync, full access
           </li>
           <li>
-            <code className="font-mono text-xs">editor</code> — spreadsheet data entry (requires approval)
+            <code className="font-mono text-xs">editor</code> — data entry only (no dashboard access); team leaders approve via email match
           </li>
           <li>
             <code className="font-mono text-xs">viewer</code> — read-only dashboards (default)
@@ -115,6 +116,38 @@ export default async function AdminPage() {
           Approvers are matched by email: oliver@ferguson4me.com, sarika@ferguson4me.com,
           ian@ferguson4me.com — no extra Clerk role required.
         </p>
+      </section>
+
+      <section className="mt-6 rounded-lg border border-slate-200 bg-white p-4">
+        <h2 className="mb-2 text-sm font-semibold text-dark">Data needed for live charts</h2>
+        <p className="mb-3 text-sm text-slate-600">
+          Pillars show SAMPLE ONLY until these items are provided. Blockers marked with ●.
+        </p>
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-left text-sm">
+            <thead className="border-b border-slate-200 text-slate-600">
+              <tr>
+                <th className="px-2 py-2">Pillar</th>
+                <th className="px-2 py-2">Data needed</th>
+                <th className="px-2 py-2">Source</th>
+                <th className="px-2 py-2">Owner</th>
+              </tr>
+            </thead>
+            <tbody>
+              {DATA_REQUIREMENTS.map((req) => (
+                <tr key={`${req.pillar}-${req.item}`} className="border-b border-slate-100">
+                  <td className="px-2 py-2 font-medium">
+                    {req.blocker ? "● " : ""}
+                    {req.pillar}
+                  </td>
+                  <td className="px-2 py-2">{req.item}</td>
+                  <td className="px-2 py-2 text-slate-500">{req.source}</td>
+                  <td className="px-2 py-2 text-slate-500">{req.owner}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </section>
     </DashboardShell>
   );

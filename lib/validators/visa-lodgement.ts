@@ -15,6 +15,9 @@ export const visaLodgementRowSchema = z.object({
   refused_count: z.coerce.number(),
   processing_count: optionalMetric,
   pending_actions_count: optionalMetric,
+  pending_s56: optionalMetric,
+  pending_biometrics: optionalMetric,
+  pending_medicals: optionalMetric,
   avg_days_file_to_lodgement: optionalMetric,
 });
 

@@ -16,6 +16,7 @@ export const sampleSales: SalesPipelineRow[] = [
     leads_facebook: 45,
     leads_website: 32,
     leads_walkin: 18,
+    leads_seminar: 6,
     leads_other: 5,
     total_registrations: 22,
     lead_to_reg_pct: 24.5,
@@ -27,6 +28,7 @@ export const sampleSales: SalesPipelineRow[] = [
     leads_facebook: 52,
     leads_website: 28,
     leads_walkin: 22,
+    leads_seminar: 8,
     leads_other: 8,
     total_registrations: 25,
     lead_to_reg_pct: 26.1,
@@ -38,6 +40,7 @@ export const sampleSales: SalesPipelineRow[] = [
     leads_facebook: 48,
     leads_website: 35,
     leads_walkin: 15,
+    leads_seminar: 5,
     leads_other: 6,
     total_registrations: 24,
     lead_to_reg_pct: 25.8,
@@ -49,6 +52,7 @@ export const sampleSales: SalesPipelineRow[] = [
     leads_facebook: 55,
     leads_website: 40,
     leads_walkin: 20,
+    leads_seminar: 9,
     leads_other: 10,
     total_registrations: 18,
     lead_to_reg_pct: 15.2,
@@ -75,15 +79,21 @@ export const sampleEnrolment: EnrolmentMilestoneRow[] = enrolmentMilestonesRaw.m
   }),
 );
 
-export const sampleVisa: VisaLodgementRow[] = visaLodgementRaw.map((row) => ({
-  period: d(row.period),
-  visa_subclass: row.visa_subclass,
-  lodged_count: row.lodged_count,
-  refused_count: row.refused_count,
-  processing_count: row.processing_count,
-  pending_actions_count: row.pending_actions_count,
-  avg_days_file_to_lodgement: row.avg_days_file_to_lodgement,
-}));
+export const sampleVisa: VisaLodgementRow[] = visaLodgementRaw.map((row) => {
+  const pending = row.pending_actions_count ?? 0;
+  return {
+    period: d(row.period),
+    visa_subclass: row.visa_subclass,
+    lodged_count: row.lodged_count,
+    refused_count: row.refused_count,
+    processing_count: row.processing_count,
+    pending_actions_count: pending,
+    pending_s56: pending > 0 ? Math.ceil(pending * 0.4) : 0,
+    pending_biometrics: pending > 0 ? Math.ceil(pending * 0.35) : 0,
+    pending_medicals: pending > 0 ? Math.max(0, pending - Math.ceil(pending * 0.4) - Math.ceil(pending * 0.35)) : 0,
+    avg_days_file_to_lodgement: row.avg_days_file_to_lodgement,
+  };
+});
 
 export const sampleAccounts: AccountsReceivableRow[] = [
   {

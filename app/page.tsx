@@ -1,5 +1,10 @@
 import { redirect } from "next/navigation";
+import { getSessionUser, isEntryStaffOnly } from "@/lib/auth";
 
-export default function Home() {
+export default async function Home() {
+  const user = await getSessionUser();
+  if (user && isEntryStaffOnly(user)) {
+    redirect("/data-entry");
+  }
   redirect("/dashboard");
 }

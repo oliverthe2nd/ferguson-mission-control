@@ -7,11 +7,12 @@ import {
 import { ChartCard } from "@/components/dashboard/chart-card";
 import { SampleDataBoundary } from "@/components/dashboard/sample-data-overlay";
 import { EmptyState } from "@/components/ui/empty-state";
-import { getPillarData } from "@/lib/dashboard-data";
+import { getResolvedPillarData } from "@/lib/framework/pillar-resolve";
 import type { JobPlacementRow } from "@/lib/validators/job-placement";
 
 export default async function PlacementDashboardPage() {
-  const { rows, hasDatabase, usingSampleData, lastUploadLabel } = await getPillarData<JobPlacementRow>("job_placement");
+  const { rows, hasDatabase, usingSampleData, lastUploadLabel } =
+    await getResolvedPillarData<JobPlacementRow>("job_placement");
 
   return (
     <>

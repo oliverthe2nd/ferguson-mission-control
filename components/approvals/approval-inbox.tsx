@@ -15,6 +15,9 @@ type Submission = {
   submitted_by_email: string;
   row_count: string;
   created_at: string;
+  reviewed_by: string | null;
+  reviewed_by_email: string | null;
+  reviewed_at: string | null;
 };
 
 const fetcher = (url: string) =>
@@ -130,7 +133,8 @@ export function ApprovalHistory() {
               <th className="px-3 py-2">Report</th>
               <th className="px-3 py-2">Submitted by</th>
               <th className="px-3 py-2">Status</th>
-              <th className="px-3 py-2">Reviewed</th>
+              <th className="px-3 py-2">Approved by</th>
+              <th className="px-3 py-2">Decision at</th>
               <th className="px-3 py-2"> </th>
             </tr>
           </thead>
@@ -142,7 +146,12 @@ export function ApprovalHistory() {
                 </td>
                 <td className="px-3 py-2">{item.submitted_by_email}</td>
                 <td className="px-3 py-2 capitalize">{item.status}</td>
-                <td className="px-3 py-2">{formatDateTime(item.created_at)}</td>
+                <td className="px-3 py-2">
+                  {item.reviewed_by ?? item.reviewed_by_email ?? "—"}
+                </td>
+                <td className="px-3 py-2">
+                  {item.reviewed_at ? formatDateTime(item.reviewed_at) : "—"}
+                </td>
                 <td className="px-3 py-2">
                   <Link href={`/approvals/${item.id}`} className="text-emerald-700 hover:underline">
                     View

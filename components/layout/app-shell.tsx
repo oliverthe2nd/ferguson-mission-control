@@ -5,6 +5,7 @@ import {
   canApproveSubmissions,
   getSessionUser,
   isDemoMode,
+  isEntryStaffOnly,
 } from "@/lib/auth";
 import { MobileNav } from "./mobile-nav";
 import { SidebarNav } from "./sidebar-nav";
@@ -12,12 +13,13 @@ import { UserMenu } from "./user-menu";
 
 function buildNavPermissions(user: Awaited<ReturnType<typeof getSessionUser>>) {
   if (!user) {
-    return { isAdmin: false, canAccessDataEntry: false, canApprove: false };
+    return { isAdmin: false, canAccessDataEntry: false, canApprove: false, entryStaffOnly: false };
   }
   return {
     isAdmin: user.role === "admin",
     canAccessDataEntry: canAccessDataEntry(user),
     canApprove: canApproveSubmissions(user),
+    entryStaffOnly: isEntryStaffOnly(user),
   };
 }
 

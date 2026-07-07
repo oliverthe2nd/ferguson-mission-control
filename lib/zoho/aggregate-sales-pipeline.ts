@@ -243,6 +243,7 @@ export function aggregateSalesPipelineRows(input: {
       leads_facebook: week.leads_facebook,
       leads_website: week.leads_website,
       leads_walkin: week.leads_walkin,
+      leads_seminar: 0,
       leads_other: week.leads_other,
       total_registrations: week.total_registrations,
       lead_to_reg_pct: leadToRegPct,

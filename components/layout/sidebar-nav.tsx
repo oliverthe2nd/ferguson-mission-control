@@ -22,14 +22,10 @@ export type NavPermissions = {
   isAdmin: boolean;
   canAccessDataEntry: boolean;
   canApprove: boolean;
+  entryStaffOnly: boolean;
 };
 
-const NAV_ITEMS: {
-  href: string;
-  label: string;
-  icon: LucideIcon;
-  show?: (perms: NavPermissions) => boolean;
-}[] = [
+const DASHBOARD_NAV = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
   { href: "/dashboard/sales", label: "Sales & Marketing", icon: Megaphone },
   { href: "/dashboard/enrolment", label: "Enrolment & Finance", icon: GraduationCap },
@@ -37,6 +33,18 @@ const NAV_ITEMS: {
   { href: "/dashboard/accounts", label: "Accounts", icon: BadgeDollarSign },
   { href: "/dashboard/placement", label: "Job Placement", icon: BriefcaseBusiness },
   { href: "/dashboard/centres", label: "Study Centres", icon: Building2 },
+] as const;
+
+const NAV_ITEMS: {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  show?: (perms: NavPermissions) => boolean;
+}[] = [
+  ...DASHBOARD_NAV.map((item) => ({
+    ...item,
+    show: (perms: NavPermissions) => !perms.entryStaffOnly,
+  })),
   {
     href: "/data-entry",
     label: "Data Entry",
@@ -61,7 +69,7 @@ const NAV_ITEMS: {
     icon: UsersRound,
     show: (perms) => perms.isAdmin,
   },
-  { href: "/preview", label: "Chart Preview", icon: LayoutDashboard },
+  { href: "/preview", label: "Chart Preview", icon: LayoutDashboard, show: (perms) => !perms.entryStaffOnly },
 ];
 
 function NavItemLabel({ label }: { label: string }) {

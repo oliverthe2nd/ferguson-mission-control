@@ -34,8 +34,23 @@ export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
   const user = await currentUser();
   if (!user) return null;
 
-  const email = user.emailAddresses[0]?.emailAddress ?? "";
+  const allEmails = user.emailAddresses.map((entry) =>
+    normalizeEmail(entry.emailAddress),
+  );
+  const primary =
+    user.emailAddresses.find(
+      (entry) => entry.id === user.primaryEmailAddressId,
+    )?.emailAddress ??
+    user.emailAddresses[0]?.emailAddress ??
+    "";
+  const allowlistedEmail =
+    allEmails.find((email) =>
+      (APPROVER_EMAILS as readonly string[]).includes(email),
+    ) ?? null;
+  const email = allowlistedEmail ?? normalizeEmail(primary);
   const role = (user.publicMetadata?.role as UserRole | undefined) ?? "viewer";
+  const isApprover =
+    Boolean(allowlistedEmail) || isApproverEmail(primary);
 
   return {
     id: user.id,
@@ -46,7 +61,7 @@ export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
       "User",
     email,
     role,
-    isApprover: isApproverEmail(email),
+    isApprover,
   };
 });
 

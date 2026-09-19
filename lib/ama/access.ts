@@ -6,9 +6,11 @@ const AMA_EMAILS = new Set(
 );
 
 export function canAccessAskMeAnything(
-  user: Pick<SessionUser, "email"> | null | undefined,
+  user: Pick<SessionUser, "email" | "isApprover"> | null | undefined,
 ): boolean {
-  if (!user?.email) return false;
+  if (!user) return false;
+  if (user.isApprover) return true;
+  if (!user.email) return false;
   return AMA_EMAILS.has(user.email.trim().toLowerCase());
 }
 

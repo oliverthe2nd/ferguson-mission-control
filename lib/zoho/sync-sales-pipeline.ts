@@ -50,10 +50,13 @@ export async function syncSalesPipelineFromZoho(options?: {
     try {
       await fetchDealStageHistory(convertedDeals[0]!.id);
     } catch (error) {
-      if (isZohoScopeError(error)) {
-        stageHistoryLimited = true;
-      } else {
-        throw error;
+      // Missing settings/related_lists scopes is common — continue with stage fallbacks.
+      stageHistoryLimited = true;
+      if (!isZohoScopeError(error)) {
+        console.warn(
+          "Zoho Stage_History unavailable; continuing without it:",
+          error instanceof Error ? error.message : error,
+        );
       }
     }
   }
@@ -65,10 +68,23 @@ export async function syncSalesPipelineFromZoho(options?: {
       if (stageHistoryLimited) {
         return { deal, history: [] };
       }
-      return {
-        deal,
-        history: await fetchDealStageHistory(deal.id),
-      };
+      try {
+        return {
+          deal,
+          history: await fetchDealStageHistory(deal.id),
+        };
+      } catch (error) {
+        if (isZohoScopeError(error)) {
+          stageHistoryLimited = true;
+          return { deal, history: [] };
+        }
+        // One deal failing history shouldn't abort the whole sync.
+        console.warn(
+          `Zoho Stage_History failed for deal ${deal.id}:`,
+          error instanceof Error ? error.message : error,
+        );
+        return { deal, history: [] };
+      }
     },
   );
 

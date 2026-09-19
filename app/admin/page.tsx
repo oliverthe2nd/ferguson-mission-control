@@ -83,11 +83,12 @@ export default async function AdminPage() {
               <strong>Standard</strong>, <strong>Study Centre</strong>, and{" "}
               <strong>YESSFUND</strong> pipelines into Sales &amp; Marketing.
               Study Centre stage counts also refresh the centres enrolment
-              pipeline chart. Stage transition dates need{" "}
+              pipeline chart. If sync reports an invalid scope, regenerate the
+              Zoho Self Client refresh token with:{" "}
               <code className="font-mono text-xs">
-                ZohoCRM.settings.related_lists.READ
-              </code>{" "}
-              in addition to leads/deals read scopes.
+                ZohoCRM.modules.leads.READ,ZohoCRM.modules.deals.READ,ZohoCRM.settings.fields.READ,ZohoCRM.settings.related_lists.READ
+              </code>
+              .
             </p>
             <ZohoSalesSyncButton />
           </>

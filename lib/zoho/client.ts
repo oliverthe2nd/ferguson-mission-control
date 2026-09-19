@@ -139,12 +139,58 @@ export async function fetchAllLeadsInRange(
   );
 }
 
+export function isZohoScopeError(error: unknown): boolean {
+  const message = (error instanceof Error ? error.message : String(error)).toLowerCase();
+  return (
+    message.includes("oauth_scope_mismatch") ||
+    message.includes("invalid oauth scope") ||
+    message.includes("invalid_scope") ||
+    message.includes("insufficient privilege") ||
+    message.includes("permission denied")
+  );
+}
+
+function isZohoFieldPermissionError(error: unknown): boolean {
+  const message = (error instanceof Error ? error.message : String(error)).toLowerCase();
+  return (
+    isZohoScopeError(error) ||
+    message.includes("invalid field") ||
+    message.includes("not approved") ||
+    message.includes("no permission")
+  );
+}
+
 export async function fetchAllDealsInRange(
   startIso: string,
   endIso: string,
 ): Promise<ZohoDealRecord[]> {
-  const fields =
+  const fieldsWithPipeline =
     "Stage,Pipeline,Lead_Source,Created_Time,Stage_Modified_Time,Modified_Time";
+  const fieldsWithoutPipeline =
+    "Stage,Lead_Source,Created_Time,Stage_Modified_Time,Modified_Time";
+
+  try {
+    return await fetchAllDealsInRangeWithFields(
+      startIso,
+      endIso,
+      fieldsWithPipeline,
+    );
+  } catch (error) {
+    if (!isZohoFieldPermissionError(error)) throw error;
+    // Token may lack Pipeline field access — sync can still run on stages alone.
+    return fetchAllDealsInRangeWithFields(
+      startIso,
+      endIso,
+      fieldsWithoutPipeline,
+    );
+  }
+}
+
+async function fetchAllDealsInRangeWithFields(
+  startIso: string,
+  endIso: string,
+  fields: string,
+): Promise<ZohoDealRecord[]> {
   const rangeStart = new Date(startIso);
   const rangeEnd = new Date(endIso);
   const byId = new Map<string, ZohoDealRecord>();
@@ -286,14 +332,6 @@ async function fetchSearchByDateRange<T extends { id: string }>(
     }
     return [...byId.values()];
   }
-}
-
-export function isZohoScopeError(error: unknown): boolean {
-  const message = error instanceof Error ? error.message : String(error);
-  return (
-    message.includes("OAUTH_SCOPE_MISMATCH") ||
-    message.includes("invalid oauth scope")
-  );
 }
 
 /** Stage_History is a related-list API — needs settings scopes, not a separate scope name. */

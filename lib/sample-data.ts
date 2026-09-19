@@ -13,6 +13,7 @@ const dn = (iso: string | null) => (iso ? d(iso) : null);
 export const sampleSales: SalesPipelineRow[] = [
   {
     period_start: d("2026-06-09"),
+    pipeline: "Standard",
     leads_facebook: 45,
     leads_website: 32,
     leads_walkin: 18,
@@ -25,6 +26,7 @@ export const sampleSales: SalesPipelineRow[] = [
   },
   {
     period_start: d("2026-06-16"),
+    pipeline: "Standard",
     leads_facebook: 52,
     leads_website: 28,
     leads_walkin: 22,
@@ -37,6 +39,7 @@ export const sampleSales: SalesPipelineRow[] = [
   },
   {
     period_start: d("2026-06-23"),
+    pipeline: "Standard",
     leads_facebook: 48,
     leads_website: 35,
     leads_walkin: 15,
@@ -49,6 +52,7 @@ export const sampleSales: SalesPipelineRow[] = [
   },
   {
     period_start: d("2026-06-30"),
+    pipeline: "Standard",
     leads_facebook: 55,
     leads_website: 40,
     leads_walkin: 20,

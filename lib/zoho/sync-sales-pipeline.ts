@@ -1,7 +1,8 @@
+import { eq } from "drizzle-orm";
 import { revalidateDashboardData } from "@/lib/cached-queries";
 import { requireDb } from "@/lib/db";
 import { getPeriodDate, validateReportData } from "@/lib/parse";
-import { reportSnapshots, uploads } from "@/lib/schema";
+import { reportSnapshots, uploads, zohoPipelineStages } from "@/lib/schema";
 import { ZOHO_SYNC_WEEKS } from "./config";
 import {
   fetchAllDealsInRange,
@@ -12,6 +13,7 @@ import {
 } from "./client";
 import {
   aggregateSalesPipelineRows,
+  countStudyCentreStages,
   filterConvertedDeals,
 } from "./aggregate-sales-pipeline";
 import { formatZohoDateTime, zohoBetweenRange } from "./weeks";
@@ -23,6 +25,8 @@ export type ZohoSalesSyncResult = {
   leadsFetched: number;
   dealsFetched: number;
   stageHistoriesFetched: number;
+  studyCentreStages: number;
+  pipelines: string[];
 };
 
 export async function syncSalesPipelineFromZoho(options?: {
@@ -74,6 +78,8 @@ export async function syncSalesPipelineFromZoho(options?: {
     deals: histories,
   });
 
+  const studyCentreStages = countStudyCentreStages(deals);
+
   const validated = validateReportData("sales_pipeline", rows);
   const database = requireDb();
   const uploadedBy = options?.uploadedBy ?? "zoho-sync";
@@ -101,7 +107,26 @@ export async function syncSalesPipelineFromZoho(options?: {
     })),
   );
 
+  await database
+    .delete(zohoPipelineStages)
+    .where(eq(zohoPipelineStages.pipeline, "Study Centre"));
+
+  if (studyCentreStages.length > 0) {
+    await database.insert(zohoPipelineStages).values({
+      pipeline: "Study Centre",
+      stages: studyCentreStages,
+    });
+  }
+
   revalidateDashboardData("sales_pipeline");
+  revalidateDashboardData("study_centres");
+
+  const pipelineSet = new Set(
+    validated.map((row) => {
+      const r = row as { pipeline?: string };
+      return r.pipeline ?? "Standard";
+    }),
+  );
 
   return {
     rowCount: validated.length,
@@ -110,5 +135,7 @@ export async function syncSalesPipelineFromZoho(options?: {
     leadsFetched: leads.length,
     dealsFetched: deals.length,
     stageHistoriesFetched: histories.length,
+    studyCentreStages: studyCentreStages.length,
+    pipelines: [...pipelineSet],
   };
 }

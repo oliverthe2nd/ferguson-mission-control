@@ -51,6 +51,23 @@ async function main() {
   let stageHistory = { ok: false, detail: "skipped (Deals check failed)" };
   if (deals.ok) {
     const sampleDeals = await fetchAllDealsInRange(startIso, endIso);
+    const pipelines = new Set(
+      sampleDeals
+        .map((deal) => {
+          const raw = deal.Pipeline;
+          if (raw == null) return null;
+          return typeof raw === "string"
+            ? raw
+            : (raw.name ?? raw.display_value ?? null);
+        })
+        .filter(Boolean),
+    );
+    console.log(
+      `ℹ Pipelines in sample window — ${
+        pipelines.size > 0 ? [...pipelines].join(", ") : "none / field empty"
+      }`,
+    );
+
     const converted = sampleDeals.find((deal) => deal.Stage?.includes("Paid"));
     if (converted) {
       stageHistory = await check("Deal Stage_History read", () =>

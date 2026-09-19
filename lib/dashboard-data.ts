@@ -157,7 +157,7 @@ export async function getDashboardOverview() {
 
   try {
     const [
-      salesSnapshots,
+      salesUploadResult,
       enrolmentUploadResult,
       visaSnapshots,
       accountsSnapshots,
@@ -165,7 +165,7 @@ export async function getDashboardOverview() {
       centresSnapshots,
       lastUpdated,
     ] = await Promise.all([
-      getCachedLatestSnapshots("sales_pipeline", 8),
+      getCachedLatestUploadSnapshots("sales_pipeline"),
       getCachedLatestUploadSnapshots("enrolment_milestones"),
       getCachedLatestSnapshots("visa_lodgement", 8),
       getCachedLatestSnapshots("accounts_receivable", 1),
@@ -174,7 +174,16 @@ export async function getDashboardOverview() {
       getCachedLastUpdatedByPillar(),
     ]);
 
-    const sales = flattenSnapshotRows<SalesPipelineRow>(salesSnapshots);
+    const salesAll = flattenSnapshotRows<SalesPipelineRow>(
+      salesUploadResult.snapshots,
+    );
+    // Overview KPIs use Standard pipeline (where lead volume lives).
+    const sales = salesAll
+      .filter((row) => (row.pipeline ?? "Standard") === "Standard")
+      .sort(
+        (a, b) =>
+          new Date(b.period_start).getTime() - new Date(a.period_start).getTime(),
+      );
     const { snapshots: enrolmentSnapshots } = enrolmentUploadResult;
     const enrolment = normalizeEnrolmentRows(
       flattenSnapshotRows<EnrolmentMilestoneRow>(enrolmentSnapshots),
@@ -205,10 +214,10 @@ export async function getDashboardOverview() {
       accounts,
       placement,
       centres,
-      salesSparkline: salesSnapshots
+      salesSparkline: sales
         .slice()
         .reverse()
-        .map((s) => (s.data as SalesPipelineRow).lead_to_reg_pct ?? 0),
+        .map((row) => row.lead_to_reg_pct ?? 0),
       visaSparkline: visaSnapshots
         .slice()
         .reverse()

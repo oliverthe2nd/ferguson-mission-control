@@ -112,6 +112,7 @@ export type ZohoLeadRecord = {
 export type ZohoDealRecord = {
   id: string;
   Stage?: string | null;
+  Pipeline?: string | { name?: string; display_value?: string } | null;
   Lead_Source?: string | null;
   Created_Time?: string;
   Stage_Modified_Time?: string;
@@ -143,7 +144,7 @@ export async function fetchAllDealsInRange(
   endIso: string,
 ): Promise<ZohoDealRecord[]> {
   const fields =
-    "Stage,Lead_Source,Created_Time,Stage_Modified_Time,Modified_Time";
+    "Stage,Pipeline,Lead_Source,Created_Time,Stage_Modified_Time,Modified_Time";
   const rangeStart = new Date(startIso);
   const rangeEnd = new Date(endIso);
   const byId = new Map<string, ZohoDealRecord>();
@@ -161,6 +162,28 @@ export async function fetchAllDealsInRange(
   }
 
   return [...byId.values()];
+}
+
+export type ZohoPipelineSetting = {
+  id?: string;
+  display_value?: string;
+  actual_value?: string;
+  maps?: Array<{
+    display_value?: string;
+    actual_value?: string;
+    sequence_number?: number;
+  }>;
+};
+
+/** Requires settings scopes + Deals layout_id. Returns [] on scope errors. */
+export async function fetchDealPipelines(
+  layoutId: string,
+): Promise<ZohoPipelineSetting[]> {
+  const params = new URLSearchParams({ layout_id: layoutId });
+  const body = await zohoFetch<{ pipeline?: ZohoPipelineSetting[] }>(
+    `/settings/pipeline?${params.toString()}`,
+  );
+  return body.pipeline ?? [];
 }
 
 function isZohoSearchLimitError(error: unknown): boolean {

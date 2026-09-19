@@ -18,12 +18,19 @@ import {
   resolveStudyCentreAvgDays,
   resolveStudyCentrePipeline,
 } from "@/lib/framework/pillar-resolve";
+import { getLatestStudyCentreStages } from "@/lib/zoho/pipeline-stages";
 import type { StudyCentresRow } from "@/lib/validators/study-centres";
 
 export default async function CentresDashboardPage() {
-  const { rows, hasDatabase, usingSampleData, lastUploadLabel, forcedSampleFallback } =
-    await getResolvedPillarData<StudyCentresRow>("study_centres");
-  const { stages } = resolveStudyCentrePipeline(usingSampleData);
+  const [{ rows, hasDatabase, usingSampleData, lastUploadLabel, forcedSampleFallback }, liveStages] =
+    await Promise.all([
+      getResolvedPillarData<StudyCentresRow>("study_centres"),
+      getLatestStudyCentreStages(),
+    ]);
+  const { stages, isSample: stagesAreSample } = resolveStudyCentrePipeline(
+    usingSampleData,
+    liveStages,
+  );
   const { rows: avgDays } = resolveStudyCentreAvgDays(usingSampleData);
 
   return (
@@ -51,7 +58,15 @@ export default async function CentresDashboardPage() {
             <ChartCard title="Scheduled Leads">
               <ScheduledLeadsChart data={rows} />
             </ChartCard>
-            <ChartCard title="Enrolment Pipeline" subtitle="Kim-verification stages" className="lg:col-span-2">
+            <ChartCard
+              title="Enrolment Pipeline"
+              subtitle={
+                stagesAreSample
+                  ? "Kim-verification stages (sample)"
+                  : "Live Zoho Study Centre stages"
+              }
+              className="lg:col-span-2"
+            >
               <StudyCentrePipelineChart stages={stages} />
             </ChartCard>
             <ChartCard title="Avg Days: Reg → Offer & Offer → Installment" className="lg:col-span-2">

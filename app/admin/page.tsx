@@ -1,9 +1,12 @@
 import { redirect } from "next/navigation";
+import { SheetSyncButtons } from "@/components/admin/sheet-sync-buttons";
 import { ZohoSalesSyncButton } from "@/components/admin/zoho-sales-sync";
 import { PageHeader } from "@/components/layout/app-shell";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { requireAdmin } from "@/lib/auth";
 import { isZohoConfigured } from "@/lib/zoho/config";
+import { isGoogleSheetsConfigured } from "@/lib/sheets/sync-visa-google";
+import { isMicrosoftGraphConfigured } from "@/lib/sheets/sync-enrolment-sharepoint";
 import { DATA_REQUIREMENTS } from "@/lib/framework/data-requirements";
 import { formatDate } from "@/lib/format";
 import { getUploadHistory } from "@/lib/queries";
@@ -76,9 +79,11 @@ export default async function AdminPage() {
         {isZohoConfigured() ? (
           <>
             <p className="mb-4 text-sm text-slate-600">
-              Pull the last 12 weeks of leads and deal stage history into Sales
-              &amp; Marketing. This creates a new upload snapshot in Neon.
-              Stage transition dates need{" "}
+              Pull the last 12 weeks of leads and deals across{" "}
+              <strong>Standard</strong>, <strong>Study Centre</strong>, and{" "}
+              <strong>YESSFUND</strong> pipelines into Sales &amp; Marketing.
+              Study Centre stage counts also refresh the centres enrolment
+              pipeline chart. Stage transition dates need{" "}
               <code className="font-mono text-xs">
                 ZohoCRM.settings.related_lists.READ
               </code>{" "}
@@ -93,6 +98,18 @@ export default async function AdminPage() {
             automatic sales pipeline sync.
           </p>
         )}
+      </section>
+
+      <section className="mt-6 rounded-lg border border-slate-200 bg-white p-4">
+        <h2 className="mb-2 text-sm font-semibold text-dark">Live tracker sync</h2>
+        <p className="mb-4 text-sm text-slate-600">
+          Pull the Visa Google Sheet and Enrolments SharePoint workbook into
+          Neon as visa / enrolment snapshots (same publish path as uploads).
+        </p>
+        <SheetSyncButtons
+          googleConfigured={isGoogleSheetsConfigured()}
+          graphConfigured={isMicrosoftGraphConfigured()}
+        />
       </section>
 
       <section className="mt-6 rounded-lg border border-slate-200 bg-white p-4">

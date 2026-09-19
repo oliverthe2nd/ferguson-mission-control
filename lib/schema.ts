@@ -41,3 +41,33 @@ export const pendingSubmissions = pgTable("pending_submissions", {
   created_at: timestamp("created_at").defaultNow().notNull(),
   reviewed_at: timestamp("reviewed_at"),
 });
+
+/** Latest Zoho deal stage counts per pipeline (e.g. Study Centre kanban). */
+export const zohoPipelineStages = pgTable("zoho_pipeline_stages", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  pipeline: text("pipeline").notNull(),
+  stages: jsonb("stages").notNull(),
+  synced_at: timestamp("synced_at").defaultNow().notNull(),
+});
+
+export const amaConversations = pgTable("ama_conversations", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  owner_email: text("owner_email").notNull(),
+  title: text("title"),
+  messages: jsonb("messages").notNull().default([]),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+  updated_at: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const trackedReports = pgTable("tracked_reports", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  owner_email: text("owner_email").notNull(),
+  title: text("title").notNull(),
+  question: text("question").notNull(),
+  tool_plan: jsonb("tool_plan").notNull().default({}),
+  schedule: text("schedule").notNull().default("daily"),
+  last_run_at: timestamp("last_run_at"),
+  last_result: jsonb("last_result"),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+  updated_at: timestamp("updated_at").defaultNow().notNull(),
+});

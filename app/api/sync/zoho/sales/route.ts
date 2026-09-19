@@ -7,12 +7,21 @@ export const maxDuration = 120;
 
 function isAuthorizedCron(request: Request): boolean {
   const secret = process.env.CRON_SECRET;
-  if (!secret) return false;
-  const auth = request.headers.get("authorization");
-  return auth === `Bearer ${secret}`;
+  if (secret && request.headers.get("authorization") === `Bearer ${secret}`) {
+    return true;
+  }
+  return request.headers.get("x-vercel-cron") === "1";
 }
 
 export async function POST(request: Request) {
+  return handleZohoSalesSync(request);
+}
+
+export async function GET(request: Request) {
+  return handleZohoSalesSync(request);
+}
+
+async function handleZohoSalesSync(request: Request) {
   if (!isZohoConfigured()) {
     return NextResponse.json(
       { error: "Zoho CRM is not configured" },
@@ -32,7 +41,10 @@ export async function POST(request: Request) {
   }
 
   try {
-    const body = cron ? {} : await request.json().catch(() => ({}));
+    const body =
+      request.method === "POST"
+        ? await request.json().catch(() => ({}))
+        : {};
     const weekCount =
       typeof body.weekCount === "number" && body.weekCount > 0
         ? Math.min(body.weekCount, 26)

@@ -1,4 +1,22 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "framework": "nextjs"
+  "framework": "nextjs",
+  "crons": [
+    {
+      "path": "/api/sync/zoho/sales",
+      "schedule": "0 8 * * 1-5"
+    },
+    {
+      "path": "/api/sync/sheets/visa",
+      "schedule": "30 8 * * 1-5"
+    },
+    {
+      "path": "/api/sync/sheets/enrolment",
+      "schedule": "45 8 * * 1-5"
+    },
+    {
+      "path": "/api/ama/refresh",
+      "schedule": "0 9 * * *"
+    }
+  ]
 }

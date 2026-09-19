@@ -1,7 +1,11 @@
 import { z } from "zod";
+import { SALES_PIPELINE_LABELS } from "@/lib/zoho-sales-mapping";
+
+export const salesPipelineLabelSchema = z.enum(SALES_PIPELINE_LABELS);
 
 export const salesPipelineRowSchema = z.object({
   period_start: z.coerce.date(),
+  pipeline: salesPipelineLabelSchema.default("Standard"),
   leads_facebook: z.coerce.number(),
   leads_website: z.coerce.number(),
   leads_walkin: z.coerce.number(),

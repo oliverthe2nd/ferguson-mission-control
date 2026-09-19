@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import {
+  canAccessAdmin,
   canAccessDataEntry,
   canApproveSubmissions,
   getSessionUser,
@@ -16,7 +17,7 @@ function buildNavPermissions(user: Awaited<ReturnType<typeof getSessionUser>>) {
     return { isAdmin: false, canAccessDataEntry: false, canApprove: false, entryStaffOnly: false };
   }
   return {
-    isAdmin: user.role === "admin",
+    isAdmin: canAccessAdmin(user),
     canAccessDataEntry: canAccessDataEntry(user),
     canApprove: canApproveSubmissions(user),
     entryStaffOnly: isEntryStaffOnly(user),
@@ -95,7 +96,7 @@ export async function TopBar() {
               )}
               {user.isApprover && user.role !== "admin" && (
                 <span className="rounded-full border border-white/80 bg-white/50 px-3 py-1 text-sm font-black text-orange-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-xl ring-1 ring-orange-100/70">
-                  Approver
+                  Leadership
                 </span>
               )}
             </>

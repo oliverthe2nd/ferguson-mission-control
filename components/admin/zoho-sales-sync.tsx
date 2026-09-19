@@ -26,6 +26,7 @@ export function ZohoSalesSyncButton() {
         leadsFetched?: number;
         dealsFetched?: number;
         stageHistoriesFetched?: number;
+        pipelines?: string[];
       };
 
       if (!response.ok) {
@@ -33,7 +34,11 @@ export function ZohoSalesSyncButton() {
       }
 
       setMessage(
-        `Synced ${body.rowCount ?? 0} weekly rows from Zoho (${body.leadsFetched ?? 0} leads, ${body.dealsFetched ?? 0} deals).`,
+        `Synced ${body.rowCount ?? 0} weekly rows from Zoho (${body.leadsFetched ?? 0} leads, ${body.dealsFetched ?? 0} deals${
+          body.pipelines?.length
+            ? `; pipelines: ${body.pipelines.join(", ")}`
+            : ""
+        }).`,
       );
     } catch (syncError) {
       setError(

@@ -142,7 +142,11 @@ export function resolveVisaPipelineStatus(
 
 export function resolveStudyCentrePipeline(
   usingSampleData: boolean,
+  liveStages?: StudyCentrePipelineStage[] | null,
 ): { stages: StudyCentrePipelineStage[]; isSample: boolean } {
+  if (liveStages && liveStages.length > 0) {
+    return { stages: liveStages, isSample: false };
+  }
   if (usingSampleData) {
     return { stages: sampleStudyCentrePipeline, isSample: true };
   }

@@ -1,13 +1,6 @@
-import {
-  LeadConversionChart,
-  LeadSourceBarChart,
-  RegistrationsTrendChart,
-  TotalLeadsChart,
-} from "@/components/charts/sales-pipeline-charts";
-import { ChartCard } from "@/components/dashboard/chart-card";
+import { SalesPipelineDashboard } from "@/components/dashboard/sales-pipeline-dashboard";
 import { DashboardReportSection } from "@/components/dashboard/dashboard-report-section";
 import { SampleDataBoundary } from "@/components/dashboard/sample-data-overlay";
-import { EmptyState } from "@/components/ui/empty-state";
 import { getResolvedPillarData } from "@/lib/framework/pillar-resolve";
 import type { SalesPipelineRow } from "@/lib/validators/sales-pipeline";
 
@@ -18,7 +11,7 @@ export default async function SalesDashboardPage() {
   return (
     <DashboardReportSection
       title="Sales & Marketing"
-      description="Pipeline conversion — lead source and registration tracking"
+      description="Pipeline conversion across Standard, Study Centre, and YESSFUND"
       lastUploadLabel={!usingSampleData ? lastUploadLabel : null}
     >
       {!hasDatabase && !usingSampleData && (
@@ -40,24 +33,7 @@ export default async function SalesDashboardPage() {
           </>
         }
       >
-        {rows.length === 0 ? (
-          <EmptyState />
-        ) : (
-          <div className="grid gap-6 lg:grid-cols-2">
-            <ChartCard title="Lead Source Breakdown" subtitle="Click a segment to drill down" className="lg:col-span-2">
-              <LeadSourceBarChart data={rows} />
-            </ChartCard>
-            <ChartCard title="Total Leads Received" subtitle="Click a bar to drill down by source">
-              <TotalLeadsChart data={rows} />
-            </ChartCard>
-            <ChartCard title="Total Registrations" subtitle="Count (bars) with conversion % (line)">
-              <RegistrationsTrendChart data={rows} />
-            </ChartCard>
-            <ChartCard title="Lead → Registration Conversion" subtitle="Leads vs registrations with %" className="lg:col-span-2">
-              <LeadConversionChart data={rows} />
-            </ChartCard>
-          </div>
-        )}
+        <SalesPipelineDashboard rows={rows} />
       </SampleDataBoundary>
     </DashboardReportSection>
   );

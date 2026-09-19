@@ -1,10 +1,12 @@
+import { AskMeAnythingPanel } from "@/components/dashboard/ask-me-anything";
 import { AlertTray } from "@/components/dashboard/alert-tray";
 import { DashboardCard } from "@/components/dashboard/dashboard-card";
 import { DashboardReportSection } from "@/components/dashboard/dashboard-report-section";
 import { DemoBanner } from "@/components/dashboard/demo-banner";
 import { SampleDataBoundary } from "@/components/dashboard/sample-data-overlay";
 import { EmptyState } from "@/components/ui/empty-state";
-import { getSessionUser, isDemoMode } from "@/lib/auth";
+import { canAccessAskMeAnything } from "@/lib/ama/access";
+import { canAccessAdmin, getSessionUser, isDemoMode } from "@/lib/auth";
 import { getDashboardOverview } from "@/lib/dashboard-data";
 
 export default async function DashboardPage() {
@@ -12,6 +14,7 @@ export default async function DashboardPage() {
     getDashboardOverview(),
     getSessionUser(),
   ]);
+  const showAma = canAccessAskMeAnything(user);
 
   return (
     <DashboardReportSection
@@ -28,6 +31,8 @@ export default async function DashboardPage() {
         </div>
       ) : null}
 
+      {showAma ? <AskMeAnythingPanel /> : null}
+
       <SampleDataBoundary
         active={overview.usingSampleData}
         hint={
@@ -42,7 +47,7 @@ export default async function DashboardPage() {
         <AlertTray alerts={overview.alerts} />
 
         {overview.cards.length === 0 ? (
-          <EmptyState showUploadLink={user?.role === "admin"} />
+          <EmptyState showUploadLink={user ? canAccessAdmin(user) : false} />
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {overview.cards.map((card) => (

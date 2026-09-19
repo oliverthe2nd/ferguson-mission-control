@@ -58,6 +58,11 @@ export function canApproveSubmissions(user: SessionUser): boolean {
   return user.role === "admin" || user.isApprover;
 }
 
+/** Admin UI + sync/upload: Clerk admins and leadership approvers. */
+export function canAccessAdmin(user: SessionUser): boolean {
+  return user.role === "admin" || user.isApprover;
+}
+
 /** Staff with editor role only — data entry screen, no dashboard access. */
 export function isEntryStaffOnly(user: SessionUser): boolean {
   return user.role === "editor" && !user.isApprover;
@@ -70,7 +75,7 @@ export function canViewDashboards(user: SessionUser): boolean {
 export async function requireAdmin(): Promise<SessionUser | null> {
   const user = await getSessionUser();
   if (!user) return null;
-  if (user.role !== "admin") return null;
+  if (!canAccessAdmin(user)) return null;
   return user;
 }
 
